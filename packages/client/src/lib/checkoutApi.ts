@@ -1,0 +1,17 @@
+import type { Order } from "@caracol/shared";
+import { apiPost } from "./apiClient.js";
+
+export interface CreateCheckoutInput {
+  addressId?: string;
+  shippingMethod: "pickup" | "home";
+  expectedShippingCost: number;
+  notes?: string;
+}
+
+export interface CheckoutResult {
+  order: Order;
+  checkoutUrl: string;
+}
+
+export const createCheckout = (input: CreateCheckoutInput) =>
+  apiPost<CheckoutResult>("/checkout", input);

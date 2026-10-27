@@ -1,0 +1,80 @@
+import cookieParser from "cookie-parser";
+import cors from "cors";
+import express, { type Request, type Response } from "express";
+import mongoSanitize from "express-mongo-sanitize";
+import helmet from "helmet";
+import { env } from "./config/env.js";
+import { errorHandler } from "./middleware/errorHandler.js";
+import { notFoundHandler } from "./middleware/notFoundHandler.js";
+import { adminCashSessionRouter } from "./routes/adminCashSessionRoutes.js";
+import { adminCategoryRouter } from "./routes/adminCategoryRoutes.js";
+import { adminOrderRouter } from "./routes/adminOrderRoutes.js";
+import { adminProductRouter } from "./routes/adminProductRoutes.js";
+import { adminStoreSaleRouter } from "./routes/adminStoreSaleRoutes.js";
+import { adminRouter } from "./routes/adminRoutes.js";
+import { authRouter } from "./routes/authRoutes.js";
+import { cartRouter } from "./routes/cartRoutes.js";
+import { categoryRouter } from "./routes/categoryRoutes.js";
+import { checkoutRouter } from "./routes/checkoutRoutes.js";
+import { checkoutWebhookRouter } from "./routes/checkoutWebhookRoutes.js";
+import { inventoryRouter } from "./routes/inventoryRoutes.js";
+import { orderRouter } from "./routes/orderRoutes.js";
+import { productRouter } from "./routes/productRoutes.js";
+import { adminShippingRouter } from "./routes/adminShippingRoutes.js";
+import { shippingRouter } from "./routes/shippingRoutes.js";
+import { supplierPurchaseRouter } from "./routes/supplierPurchaseRoutes.js";
+import { uploadRouter } from "./routes/uploadRoutes.js";
+import { userRouter } from "./routes/userRoutes.js";
+import { withdrawalRouter } from "./routes/withdrawalRoutes.js";
+
+export function createApp() {
+  const app = express();
+
+  // Fly.io termina TLS en su edge y reenvía por proxy interno: sin esto,
+  // express-rate-limit lee la IP del proxy en vez de la del cliente real.
+  app.set("trust proxy", 1);
+
+  app.use(helmet());
+  app.use(cors({ origin: env.CLIENT_URL, credentials: true }));
+  app.use(cookieParser());
+
+  // El webhook de pagos se monta antes del sanitizador y con su propio
+  // parser: el handler nunca confía en este payload de todas formas (siempre
+  // re-consulta el pago real contra la API del gateway), pero mongoSanitize
+  // no debe tocar una notificación externa antes de leerla.
+  app.use("/api/checkout/webhook", express.json(), checkoutWebhookRouter);
+
+  app.use(express.json());
+  app.use(mongoSanitize());
+
+  app.get("/api/health", (_req: Request, res: Response) => {
+    res.json({ status: "ok" });
+  });
+
+  app.use("/api/auth", authRouter);
+  app.use("/api/admin", adminRouter);
+  app.use("/api/admin/categories", adminCategoryRouter);
+  app.use("/api/categories", categoryRouter);
+  app.use("/api/admin/products", adminProductRouter);
+  app.use("/api/products", productRouter);
+  app.use("/api/uploads", uploadRouter);
+  app.use("/api/cart", cartRouter);
+  app.use("/api/checkout", checkoutRouter);
+  app.use("/api/admin/orders", adminOrderRouter);
+  app.use("/api/admin/cash-sessions", adminCashSessionRouter);
+  app.use("/api/admin/store-sales", adminStoreSaleRouter);
+  app.use("/api/orders", orderRouter);
+  app.use("/api/admin/shipping", adminShippingRouter);
+  app.use("/api/shipping", shippingRouter);
+  app.use("/api/inventory", inventoryRouter);
+  app.use("/api/supplier-purchases", supplierPurchaseRouter);
+  app.use("/api/users", userRouter);
+  app.use("/api/withdrawals", withdrawalRouter);
+
+  // Con esto queda montada toda la API de negocio del backend.
+
+  app.use(notFoundHandler);
+  app.use(errorHandler);
+
+  return app;
+}
