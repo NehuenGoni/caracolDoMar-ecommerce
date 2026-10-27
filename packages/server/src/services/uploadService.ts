@@ -11,6 +11,26 @@ export interface SignedUploadParams {
   folder: string;
 }
 
+/**
+ * Los comprobantes los sube el navegador directo a Cloudinary con una firma
+ * nuestra; la URL que después llega al server es input del cliente, así que
+ * solo se acepta si apunta al Cloudinary de la tienda (si no, cualquiera
+ * podría colgar un link arbitrario en el panel del admin).
+ */
+export function isOwnCloudinaryUrl(rawUrl: string): boolean {
+  if (!env.CLOUDINARY_CLOUD_NAME) return false;
+  try {
+    const url = new URL(rawUrl);
+    return (
+      url.protocol === "https:" &&
+      url.hostname === "res.cloudinary.com" &&
+      url.pathname.startsWith(`/${env.CLOUDINARY_CLOUD_NAME}/`)
+    );
+  } catch {
+    return false;
+  }
+}
+
 const PRODUCT_IMAGES_FOLDER = "caracol/products";
 
 function sign(folder: string): SignedUploadParams {

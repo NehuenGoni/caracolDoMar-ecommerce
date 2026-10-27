@@ -114,8 +114,8 @@ describe("/api/orders", () => {
     const res = await request(app)
       .patch(`/api/orders/${order._id.toString()}/receipt`)
       .set("Authorization", `Bearer ${token}`)
-      .send({ receiptUrl: "https://res.cloudinary.com/test/receipt.jpg" });
+      .send({ receiptUrl: "https://res.cloudinary.com/test-cloud/receipt.jpg" });
     expect(res.status).toBe(200);
-    expect(res.body.order.receiptUrl).toBe("https://res.cloudinary.com/test/receipt.jpg");
+    expect(res.body.order.receiptUrl).toBe("https://res.cloudinary.com/test-cloud/receipt.jpg");
   });
 });

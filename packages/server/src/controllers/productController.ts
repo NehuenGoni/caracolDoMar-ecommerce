@@ -41,14 +41,14 @@ export const adminGetProduct = asyncHandler(async (req: Request, res: Response) 
 
 export const createProduct = asyncHandler(async (req: Request, res: Response) => {
   const input = req.body as CreateProductInput;
-  const product = await productService.createProduct(input);
+  const product = await productService.createProduct(input, req.user!.id);
   res.status(201).json({ product });
 });
 
 export const updateProduct = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params as unknown as MongoIdParam;
   const input = req.body as UpdateProductInput;
-  const product = await productService.updateProduct(id, input);
+  const product = await productService.updateProduct(id, input, req.user!.id);
   res.json({ product });
 });
 

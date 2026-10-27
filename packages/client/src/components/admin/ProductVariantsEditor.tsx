@@ -20,9 +20,14 @@ function emptyVariant(): ProductVariantInput {
 interface ProductVariantsEditorProps {
   variants: ProductVariantInput[];
   onChange: (variants: ProductVariantInput[]) => void;
+  /**
+   * SKUs de variantes que ya están guardadas. Su SKU es su identidad y su stock lo mueven las
+   * ventas, compras y ajustes (con registro): desde acá no se editan.
+   */
+  lockedSkus?: ReadonlySet<string>;
 }
 
-export function ProductVariantsEditor({ variants, onChange }: ProductVariantsEditorProps) {
+export function ProductVariantsEditor({ variants, onChange, lockedSkus }: ProductVariantsEditorProps) {
   function update(index: number, patch: Partial<ProductVariantInput>) {
     onChange(variants.map((v, i) => (i === index ? { ...v, ...patch } : v)));
   }
@@ -66,6 +71,7 @@ export function ProductVariantsEditor({ variants, onChange }: ProductVariantsEdi
                 label="SKU"
                 required
                 value={variant.sku}
+                disabled={lockedSkus?.has(variant.sku)}
                 onChange={(e) => update(index, { sku: e.target.value })}
               />
               <Input
@@ -96,10 +102,12 @@ export function ProductVariantsEditor({ variants, onChange }: ProductVariantsEdi
                 onChange={(cents) => update(index, { costPrice: cents })}
               />
               <Input
-                label="Stock"
+                label={lockedSkus?.has(variant.sku) ? "Stock actual" : "Stock inicial"}
                 type="number"
                 min={0}
                 value={variant.stock}
+                disabled={lockedSkus?.has(variant.sku)}
+                hint={lockedSkus?.has(variant.sku) ? "Se ajusta desde Inventario" : undefined}
                 onChange={(e) => update(index, { stock: Number(e.target.value) })}
               />
               <Input

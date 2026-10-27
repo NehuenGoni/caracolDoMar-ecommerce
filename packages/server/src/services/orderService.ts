@@ -9,6 +9,7 @@ import { sendOrderConfirmationEmail, sendOrderStatusChangeEmail } from "./email/
 import { recordMovements, returnStock } from "./inventoryService.js";
 import { createPaymentPreference, getPaymentDeadline, refundPayment } from "./paymentService.js";
 import { shippingCarrier } from "./shipping/index.js";
+import { isOwnCloudinaryUrl } from "./uploadService.js";
 import { getPackageForItems } from "./shippingService.js";
 import type {
   AdminListOrdersQuery,
@@ -68,6 +69,9 @@ export async function attachReceipt(
   orderId: string,
   input: AttachReceiptInput,
 ): Promise<OrderDocument> {
+  if (!isOwnCloudinaryUrl(input.receiptUrl)) {
+    throw new BadRequestError("El comprobante debe subirse desde la tienda");
+  }
   const order = await getMyOrderById(userId, orderId);
   order.receiptUrl = input.receiptUrl;
   await order.save();

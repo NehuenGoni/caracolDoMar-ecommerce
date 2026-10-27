@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { asyncHandler } from "../middleware/asyncHandler.js";
+import { runExpirationSweep } from "../jobs/expirePendingOrders.js";
 import * as checkoutService from "../services/checkoutService.js";
 import * as webhookService from "../services/webhookService.js";
 import { getNotificationDataId, getNotificationType } from "../utils/mercadoPagoNotification.js";
@@ -7,6 +8,9 @@ import type { CreateCheckoutInput } from "../validators/checkoutValidators.js";
 
 export const createCheckout = asyncHandler(async (req: Request, res: Response) => {
   const input = req.body as CreateCheckoutInput;
+  // Fly apaga la máquina sin tráfico y el intervalo del job no corre mientras duerme:
+  // antes de reservar stock se liberan los pedidos vencidos para no mostrar faltantes falsos.
+  await runExpirationSweep();
   const { order, checkoutUrl } = await checkoutService.createOrderFromCart(req.user!.id, input);
   res.status(201).json({ order, checkoutUrl });
 });

@@ -36,6 +36,10 @@ function toValues(initial?: Partial<ProductInput>): ProductInput {
 export function ProductForm({ initialValue, onSubmit, submitLabel = "Guardar producto" }: ProductFormProps) {
   const { categories } = useAdminCategories();
   const [values, setValues] = useState<ProductInput>(() => toValues(initialValue));
+  // Las variantes que vienen del servidor quedan con SKU y stock bloqueados; las que se agregan después no.
+  const [lockedSkus] = useState<ReadonlySet<string>>(
+    () => new Set((initialValue?.variants ?? []).map((v) => v.sku)),
+  );
   const [tagsText, setTagsText] = useState(() => (initialValue?.tags ?? []).join(", "));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -124,7 +128,11 @@ export function ProductForm({ initialValue, onSubmit, submitLabel = "Guardar pro
       </div>
 
       <ProductImagesEditor images={values.images} onChange={(images) => set("images", images)} />
-      <ProductVariantsEditor variants={values.variants} onChange={(variants) => set("variants", variants)} />
+      <ProductVariantsEditor
+        variants={values.variants}
+        lockedSkus={lockedSkus}
+        onChange={(variants) => set("variants", variants)}
+      />
 
       {error && <InlineMessage tone="error">{error}</InlineMessage>}
 

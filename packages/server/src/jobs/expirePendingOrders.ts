@@ -8,7 +8,7 @@ const INTERVAL_MS = 15 * 60 * 1000;
  * en la práctica la única garantía de ejecución) y después cada 15 min
  * mientras el proceso siga vivo.
  */
-async function runExpirationSweep(): Promise<void> {
+export async function runExpirationSweep(): Promise<void> {
   try {
     const expired = await expireStalePendingOrders();
     if (expired > 0) {

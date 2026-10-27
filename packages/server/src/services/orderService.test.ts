@@ -112,9 +112,25 @@ describe("attachReceipt", () => {
     const { order } = await createOrderFor(userId);
 
     const updated = await orderService.attachReceipt(userId.toString(), order._id.toString(), {
-      receiptUrl: "https://res.cloudinary.com/test/receipt.jpg",
+      receiptUrl: "https://res.cloudinary.com/test-cloud/receipt.jpg",
     });
-    expect(updated.receiptUrl).toBe("https://res.cloudinary.com/test/receipt.jpg");
+    expect(updated.receiptUrl).toBe("https://res.cloudinary.com/test-cloud/receipt.jpg");
+  });
+
+  it("rechaza un comprobante que no es del Cloudinary de la tienda", async () => {
+    const userId = new Types.ObjectId();
+    const { order } = await createOrderFor(userId);
+
+    for (const receiptUrl of [
+      "https://evil.example.com/receipt.jpg",
+      "https://res.cloudinary.com/otro-cloud/receipt.jpg",
+      "http://res.cloudinary.com/test-cloud/receipt.jpg",
+      "https://res.cloudinary.com.evil.com/test-cloud/receipt.jpg",
+    ]) {
+      await expect(
+        orderService.attachReceipt(userId.toString(), order._id.toString(), { receiptUrl }),
+      ).rejects.toThrow("El comprobante debe subirse desde la tienda");
+    }
   });
 
   it("rechaza adjuntar comprobante a un pedido ajeno", async () => {
@@ -124,7 +140,7 @@ describe("attachReceipt", () => {
 
     await expect(
       orderService.attachReceipt(userB.toString(), order._id.toString(), {
-        receiptUrl: "https://res.cloudinary.com/test/receipt.jpg",
+        receiptUrl: "https://res.cloudinary.com/test-cloud/receipt.jpg",
       }),
     ).rejects.toThrow();
   });

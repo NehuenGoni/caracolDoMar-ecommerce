@@ -76,6 +76,28 @@ describe("GET /api/products (público)", () => {
     expect(res.body.product.name).toBe("Mantel");
   });
 
+  it("no expone el costo de compra en el listado ni en el detalle", async () => {
+    const category = await Category.create({ name: "Deco" });
+    await Product.create({ name: "Mantel", category, variants: [variant("SKU-A")] });
+
+    const list = await request(app).get("/api/products");
+    expect(JSON.stringify(list.body)).not.toContain("costPrice");
+    const detail = await request(app).get("/api/products/mantel");
+    expect(JSON.stringify(detail.body)).not.toContain("costPrice");
+    expect(detail.body.product.variants[0].price).toBe(199900);
+  });
+
+  it("un admin sí ve el costo de compra", async () => {
+    const token = await adminToken();
+    const category = await Category.create({ name: "Deco" });
+    await Product.create({ name: "Mantel", category, variants: [variant("SKU-A")] });
+
+    const detail = await request(app)
+      .get("/api/products/mantel")
+      .set("Authorization", `Bearer ${token}`);
+    expect(detail.body.product.variants[0].costPrice).toBe(90000);
+  });
+
   it("devuelve 404 para un producto inactivo sin ser admin", async () => {
     const category = await Category.create({ name: "Deco" });
     await Product.create({
@@ -126,6 +148,9 @@ describe("/api/admin/products", () => {
       .delete(`/api/admin/products/${productId}`)
       .set("Authorization", `Bearer ${token}`);
     expect(deleteRes.status).toBe(204);
+
+    // Baja lógica: sigue en la base, pero inactivo.
+    expect((await Product.findById(productId))?.isActive).toBe(false);
   });
 
   it("rechaza crear un producto sin variantes", async () => {

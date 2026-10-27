@@ -158,24 +158,22 @@ export interface LowStockVariant {
 }
 
 export async function listLowStock(): Promise<LowStockVariant[]> {
-  const products = await Product.find({ isActive: true });
-  const result: LowStockVariant[] = [];
-
-  for (const product of products) {
-    for (const variant of product.variants) {
-      if (variant.stock <= variant.lowStockThreshold) {
-        result.push({
-          productId: product._id.toString(),
-          productName: product.name,
-          variantSku: variant.sku,
-          attributeName: variant.attributeName,
-          attributeValue: variant.attributeValue,
-          stock: variant.stock,
-          lowStockThreshold: variant.lowStockThreshold,
-        });
-      }
-    }
-  }
-
-  return result;
+  // Se filtra en la base: cargar todo el catálogo en memoria no escala.
+  return Product.aggregate<LowStockVariant>([
+    { $match: { isActive: true } },
+    { $unwind: "$variants" },
+    { $match: { $expr: { $lte: ["$variants.stock", "$variants.lowStockThreshold"] } } },
+    {
+      $project: {
+        _id: 0,
+        productId: { $toString: "$_id" },
+        productName: "$name",
+        variantSku: "$variants.sku",
+        attributeName: "$variants.attributeName",
+        attributeValue: "$variants.attributeValue",
+        stock: "$variants.stock",
+        lowStockThreshold: "$variants.lowStockThreshold",
+      },
+    },
+  ]);
 }

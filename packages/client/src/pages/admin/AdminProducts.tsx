@@ -39,7 +39,7 @@ export default function AdminProducts() {
       setPendingDelete(null);
       reload();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "No pudimos eliminar el producto");
+      setError(err instanceof ApiError ? err.message : "No pudimos archivar el producto");
     } finally {
       setIsDeleting(false);
     }
@@ -105,7 +105,7 @@ export default function AdminProducts() {
                   <button
                     type="button"
                     onClick={() => setPendingDelete(product._id)}
-                    aria-label={`Eliminar ${product.name}`}
+                    aria-label={`Archivar ${product.name}`}
                     className="flex size-8 items-center justify-center rounded-full text-accent2-deep hover:bg-surface-alt"
                   >
                     <Trash2 className="size-4" />
@@ -122,9 +122,9 @@ export default function AdminProducts() {
 
       <ConfirmDialog
         open={pendingDelete !== null}
-        title="¿Eliminar este producto?"
-        description="Esta acción no se puede deshacer."
-        confirmLabel="Eliminar"
+        title="¿Archivar este producto?"
+        description="Deja de mostrarse en la tienda y en el POS. Sus ventas y movimientos de stock se conservan, y podés reactivarlo editándolo."
+        confirmLabel="Archivar"
         tone="danger"
         isLoading={isDeleting}
         onConfirm={handleDelete}

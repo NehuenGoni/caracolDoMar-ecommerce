@@ -14,6 +14,7 @@ export interface IProductImage {
  * cubrir distintos rubros de HomeDeco: color, tamaño, presentación, etc.
  */
 export interface IProductVariant {
+  _id?: Types.ObjectId;
   sku: string;
   attributeName: string;
   attributeValue: string;

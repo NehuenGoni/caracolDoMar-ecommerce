@@ -2,6 +2,7 @@ import { Types } from "mongoose";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { Category } from "../models/Category.js";
 import { Product } from "../models/Product.js";
+import { StockMovement } from "../models/StockMovement.js";
 import { clearTestDB, closeTestDB, connectTestDB } from "../test/dbTestUtils.js";
 import * as productService from "./productService.js";
 
@@ -22,6 +23,25 @@ function buildVariant(sku: string, overrides: Partial<Record<string, unknown>> =
     lowStockThreshold: 1,
     ...overrides,
   };
+}
+
+const adminId = new Types.ObjectId().toString();
+
+async function createProduct(
+  categoryId: string,
+  sku: string,
+  variant: Partial<Record<string, unknown>> = {},
+) {
+  return productService.createProduct(
+    {
+      name: "Producto",
+      category: categoryId,
+      tags: [],
+      images: [],
+      variants: [buildVariant(sku, variant)],
+    },
+    adminId,
+  );
 }
 
 async function createCategory() {
@@ -142,49 +162,169 @@ describe("getPublicProductBySlug", () => {
 describe("createProduct / updateProduct / deleteProduct", () => {
   it("rechaza crear con una categoría inexistente", async () => {
     await expect(
-      productService.createProduct({
-        name: "X",
-        category: new Types.ObjectId().toString(),
-        tags: [],
-        images: [],
-        variants: [buildVariant("SKU-X")],
-      }),
+      productService.createProduct(
+        {
+          name: "X",
+          category: new Types.ObjectId().toString(),
+          tags: [],
+          images: [],
+          variants: [buildVariant("SKU-X")],
+        },
+        adminId,
+      ),
     ).rejects.toThrow();
   });
 
   it("crea, actualiza y elimina un producto", async () => {
     const category = await createCategory();
-    const product = await productService.createProduct({
-      name: "Producto",
-      category: category._id.toString(),
-      tags: [],
-      images: [],
-      variants: [buildVariant("SKU-Y")],
-    });
+    const product = await createProduct(category._id.toString(), "SKU-Y");
 
-    const updated = await productService.updateProduct(product._id.toString(), {
-      name: "Producto Actualizado",
-    });
+    const updated = await productService.updateProduct(
+      product._id.toString(),
+      { name: "Producto Actualizado" },
+      adminId,
+    );
     expect(updated.slug).toBe("producto-actualizado");
 
+    // Baja lógica: el producto sigue existiendo (pedidos, ventas y movimientos lo referencian)
+    // pero deja de verse en la tienda.
     await productService.deleteProduct(product._id.toString());
-    await expect(productService.getAdminProductById(product._id.toString())).rejects.toThrow();
+    const archived = await productService.getAdminProductById(product._id.toString());
+    expect(archived.isActive).toBe(false);
+    await expect(productService.getPublicProductBySlug(archived.slug, false)).rejects.toThrow();
   });
 
   it("rechaza actualizar hacia una categoría inexistente", async () => {
     const category = await createCategory();
-    const product = await productService.createProduct({
-      name: "Producto",
-      category: category._id.toString(),
-      tags: [],
-      images: [],
-      variants: [buildVariant("SKU-Z")],
-    });
+    const product = await createProduct(category._id.toString(), "SKU-Z");
 
     await expect(
-      productService.updateProduct(product._id.toString(), {
-        category: new Types.ObjectId().toString(),
-      }),
+      productService.updateProduct(
+        product._id.toString(),
+        { category: new Types.ObjectId().toString() },
+        adminId,
+      ),
     ).rejects.toThrow();
+  });
+
+  it("registra el stock inicial como movimiento al crear", async () => {
+    const category = await createCategory();
+    const product = await createProduct(category._id.toString(), "SKU-INI", { stock: 7 });
+
+    const movements = await StockMovement.find({ product: product._id });
+    expect(movements).toHaveLength(1);
+    expect(movements[0]).toMatchObject({
+      variantSku: "SKU-INI",
+      type: "adjustment",
+      quantity: 7,
+      previousStock: 0,
+      newStock: 7,
+    });
+  });
+
+  it("no pisa el stock de una variante existente al editar el producto", async () => {
+    const category = await createCategory();
+    const product = await createProduct(category._id.toString(), "SKU-EDIT", { stock: 5 });
+
+    // Mientras el admin tenía el formulario abierto se vendieron 2 unidades.
+    await Product.updateOne(
+      { _id: product._id, "variants.sku": "SKU-EDIT" },
+      { $inc: { "variants.$.stock": -2 } },
+    );
+
+    // El formulario manda el stock viejo (5) junto con el precio nuevo.
+    const updated = await productService.updateProduct(
+      product._id.toString(),
+      { variants: [buildVariant("SKU-EDIT", { price: 300000, stock: 5 })] },
+      adminId,
+    );
+
+    expect(updated.variants[0]?.price).toBe(300000);
+    expect(updated.variants[0]?.stock).toBe(3);
+    // Y editar no genera movimientos: solo la creación inicial.
+    expect(await StockMovement.countDocuments({ product: product._id })).toBe(1);
+  });
+
+  it("agrega una variante nueva con su stock inicial registrado", async () => {
+    const category = await createCategory();
+    const product = await createProduct(category._id.toString(), "SKU-A1", { stock: 5 });
+
+    const updated = await productService.updateProduct(
+      product._id.toString(),
+      { variants: [buildVariant("SKU-A1"), buildVariant("sku-a2", { stock: 4 })] },
+      adminId,
+    );
+
+    expect(updated.variants.map((v) => v.sku)).toEqual(["SKU-A1", "SKU-A2"]);
+    const initial = await StockMovement.find({ product: product._id, variantSku: "SKU-A2" });
+    expect(initial).toHaveLength(1);
+    expect(initial[0]).toMatchObject({ quantity: 4, newStock: 4, type: "adjustment" });
+  });
+
+  it("no deja quitar una variante que todavía tiene stock", async () => {
+    const category = await createCategory();
+    const product = await productService.createProduct(
+      {
+        name: "Producto",
+        category: category._id.toString(),
+        tags: [],
+        images: [],
+        variants: [buildVariant("SKU-K1", { stock: 2 }), buildVariant("SKU-K2", { stock: 0 })],
+      },
+      adminId,
+    );
+
+    await expect(
+      productService.updateProduct(
+        product._id.toString(),
+        { variants: [buildVariant("SKU-K2", { stock: 0 })] },
+        adminId,
+      ),
+    ).rejects.toThrow("todavía tiene stock");
+
+    // Sin stock sí se puede quitar.
+    const updated = await productService.updateProduct(
+      product._id.toString(),
+      { variants: [buildVariant("SKU-K1", { stock: 2 })] },
+      adminId,
+    );
+    expect(updated.variants.map((v) => v.sku)).toEqual(["SKU-K1"]);
+  });
+
+  it("rechaza SKUs repetidos entre las variantes", async () => {
+    const category = await createCategory();
+    await expect(
+      productService.createProduct(
+        {
+          name: "Producto",
+          category: category._id.toString(),
+          tags: [],
+          images: [],
+          variants: [buildVariant("SKU-D"), buildVariant("sku-d")],
+        },
+        adminId,
+      ),
+    ).rejects.toThrow("SKUs repetidos");
+  });
+});
+
+describe("toPublicProduct", () => {
+  it("no expone costPrice a un visitante, pero sí al admin", async () => {
+    const category = await createCategory();
+    await Product.create({ name: "Vela", category, variants: [buildVariant("SKU-PUB")] });
+
+    const list = await productService.listPublicProducts(defaultQuery, false);
+    expect(JSON.stringify(list)).not.toContain("costPrice");
+    expect(JSON.parse(JSON.stringify(list)).items[0].variants[0]).toMatchObject({
+      sku: "SKU-PUB",
+      price: 250000,
+      stock: 5,
+    });
+
+    const detail = await productService.getPublicProductBySlug("vela", false);
+    expect(JSON.stringify(detail)).not.toContain("costPrice");
+
+    const adminDetail = await productService.getPublicProductBySlug("vela", true);
+    expect(JSON.parse(JSON.stringify(adminDetail)).variants[0].costPrice).toBe(120000);
   });
 });
