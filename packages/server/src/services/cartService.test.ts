@@ -18,8 +18,7 @@ async function createProduct(overrides: Partial<Record<string, unknown>> = {}) {
     variants: [
       {
         sku: "VELA-1",
-        attributeName: "Color",
-        attributeValue: "Verde",
+        attributes: [{ name: "Color", value: "Verde" }],
         price: 250000,
         costPrice: 100000,
         stock: 5,
@@ -55,6 +54,39 @@ describe("getCart", () => {
 });
 
 describe("addItem", () => {
+  it("muestra la variante con todos sus atributos, y nada si no tiene", async () => {
+    const userId = new Types.ObjectId().toString();
+    const ropa = await createProduct({
+      name: "Pantalón hindú",
+      variants: [
+        {
+          sku: "PANT-R-M",
+          attributes: [
+            { name: "Color", value: "Rojo" },
+            { name: "Talle", value: "M" },
+          ],
+          price: 300000,
+          costPrice: 100000,
+          stock: 3,
+          lowStockThreshold: 1,
+        },
+      ],
+    });
+    const sahumerio = await createProduct({
+      name: "Sahumerio",
+      variants: [{ sku: "SAH-1", price: 20000, costPrice: 8000, stock: 10, lowStockThreshold: 2 }],
+    });
+
+    await cartService.addItem(userId, { productId: ropa._id.toString(), variantSku: "PANT-R-M", quantity: 1 });
+    const cart = await cartService.addItem(userId, {
+      productId: sahumerio._id.toString(),
+      variantSku: "SAH-1",
+      quantity: 1,
+    });
+
+    expect(cart.items.map((i) => i.variantLabel)).toEqual(["Rojo / M", ""]);
+  });
+
   it("agrega un item nuevo y calcula el subtotal", async () => {
     const userId = new Types.ObjectId().toString();
     const product = await createProduct();

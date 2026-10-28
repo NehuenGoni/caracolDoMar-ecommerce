@@ -1,7 +1,8 @@
-import { sumCents } from "@caracol/shared";
+import { sumCents, formatVariantLabel } from "@caracol/shared";
 import { Types } from "mongoose";
 import { isMercadoPagoConfigured } from "../config/env.js";
 import { getNextSequence } from "../models/Counter.js";
+import { expandBundleItems } from "./bundleService.js";
 import { Cart } from "../models/Cart.js";
 import { Order, type IOrderItem, type OrderDocument } from "../models/Order.js";
 import { Product } from "../models/Product.js";
@@ -25,7 +26,12 @@ export interface StockDecrement {
  * el log: la venta nunca llegó a concretarse). Los movimientos reales se
  * registran recién si la orden se crea con éxito.
  */
-export async function decrementStock(items: StockDecrement[]): Promise<StockChange[]> {
+export async function decrementStock(requested: StockDecrement[]): Promise<StockChange[]> {
+  // Un kit descuenta el stock de cada uno de sus componentes.
+  const items = (await expandBundleItems(requested)).map((i) => ({
+    ...i,
+    product: new Types.ObjectId(i.product),
+  }));
   const applied: StockDecrement[] = [];
   const changes: StockChange[] = [];
   try {
@@ -59,7 +65,8 @@ export async function decrementStock(items: StockDecrement[]): Promise<StockChan
   }
 }
 
-export async function restockItems(items: StockDecrement[]): Promise<void> {
+export async function restockItems(requested: StockDecrement[]): Promise<void> {
+  const items = await expandBundleItems(requested);
   await Promise.all(
     items.map((item) =>
       Product.updateOne(
@@ -113,8 +120,7 @@ export async function createOrderFromCart(
       product: product._id,
       productName: product.name,
       variantSku: variant.sku,
-      attributeName: variant.attributeName,
-      attributeValue: variant.attributeValue,
+      variantLabel: formatVariantLabel(variant.attributes),
       image: product.images[0]?.url,
       unitPrice: variant.price,
       quantity: item.quantity,

@@ -36,8 +36,7 @@ async function createProduct(stock = 10) {
     variants: [
       {
         sku: `SKU-${Math.random().toString(36).slice(2)}`,
-        attributeName: "Aroma",
-        attributeValue: "Vainilla",
+        attributes: [{ name: "Aroma", value: "Vainilla" }],
         price: PRICE,
         costPrice: 40000,
         stock,

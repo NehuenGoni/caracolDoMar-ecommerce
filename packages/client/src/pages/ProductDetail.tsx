@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, ImageOff, ShoppingBag } from "lucide-react";
+import { Check, ImageOff, Play, ShoppingBag } from "lucide-react";
 import { useMemo, useState } from "react";
+import { formatVariantLabel } from "@caracol/shared";
 import { useParams } from "react-router-dom";
 import { InlineMessage } from "@/components/ui/InlineMessage";
 import { PriceTag } from "@/components/ui/PriceTag";
@@ -9,6 +10,8 @@ import { Spinner } from "@/components/ui/Spinner";
 import { Button } from "@/components/ui/Button";
 import { useCart } from "@/contexts/CartContext";
 import { useProduct } from "@/hooks/useProduct";
+import { buildGallery } from "@/lib/media";
+import { attributeOptions, isValueAvailable, pickVariant } from "@/lib/variantSelection";
 import NotFound from "./NotFound";
 
 export default function ProductDetail() {
@@ -26,10 +29,13 @@ export default function ProductDetail() {
     return product.variants.find((v) => v.sku === selectedSku) ?? product.variants[0] ?? null;
   }, [product, selectedSku]);
 
+  const options = useMemo(() => (product ? attributeOptions(product.variants) : []), [product]);
+
   if (isLoading) return <Spinner label="Cargando producto…" />;
   if (error || !product) return <NotFound />;
 
-  const image = product.images[selectedImage];
+  const gallery = buildGallery(product);
+  const current = gallery[selectedImage] ?? gallery[0];
 
   async function handleAddToCart() {
     if (!product || !variant) return;
@@ -40,8 +46,7 @@ export default function ProductDetail() {
       name: product.name,
       slug: product.slug,
       image: product.images[0]?.url,
-      attributeName: variant.attributeName,
-      attributeValue: variant.attributeValue,
+      variantLabel: formatVariantLabel(variant.attributes),
       unitPrice: variant.price,
       availableStock: variant.stock,
     });
@@ -56,26 +61,44 @@ export default function ProductDetail() {
           layoutId={`product-image-${product._id}`}
           className="aspect-square overflow-hidden rounded-2xl bg-surface-alt"
         >
-          {image ? (
-            <img src={image.url} alt={image.alt ?? product.name} className="size-full object-cover" />
+          {current?.kind === "video" ? (
+            <video
+              key={current.url}
+              src={current.url}
+              poster={current.poster}
+              controls
+              playsInline
+              preload="metadata"
+              className="size-full bg-black object-contain"
+            />
+          ) : current ? (
+            <img src={current.url} alt={current.alt ?? product.name} className="size-full object-cover" />
           ) : (
             <div className="flex size-full items-center justify-center text-text-muted">
               <ImageOff className="size-10" />
             </div>
           )}
         </motion.div>
-        {product.images.length > 1 && (
+        {gallery.length > 1 && (
           <div className="flex gap-2">
-            {product.images.map((img, index) => (
+            {gallery.map((item, index) => (
               <button
-                key={img.url + index}
+                key={item.url + index}
                 type="button"
                 onClick={() => setSelectedImage(index)}
+                aria-label={item.kind === "video" ? "Ver video" : `Ver imagen ${index + 1}`}
                 className={`size-16 shrink-0 overflow-hidden rounded-xl border-2 transition-colors ${
                   index === selectedImage ? "border-accent" : "border-transparent"
                 }`}
               >
-                <img src={img.url} alt="" className="size-full object-cover" />
+                {item.kind === "video" ? (
+                  <span className="relative block size-full bg-text/80">
+                    {item.poster && <img src={item.poster} alt="" className="size-full object-cover opacity-70" />}
+                    <Play className="absolute inset-0 m-auto size-5 text-bg" />
+                  </span>
+                ) : (
+                  <img src={item.url} alt="" className="size-full object-cover" />
+                )}
               </button>
             ))}
           </div>
@@ -96,37 +119,62 @@ export default function ProductDetail() {
 
         {product.description && <p className="text-sm leading-relaxed text-text-muted">{product.description}</p>}
 
-        {product.variants.length > 1 && variant && (
-          <div className="flex flex-col gap-2">
-            <span className="text-sm font-medium text-text">{variant.attributeName}</span>
-            <div className="flex flex-wrap gap-2">
-              {product.variants.map((v) => (
-                <button
-                  key={v.sku}
-                  type="button"
-                  onClick={() => {
-                    setSelectedSku(v.sku);
-                    setQuantity(1);
-                  }}
-                  disabled={v.stock <= 0}
-                  className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-                    v.sku === variant.sku
-                      ? "border-primary bg-primary text-on-primary"
-                      : "border-border bg-surface text-text hover:bg-surface-alt"
-                  }`}
-                >
-                  {v.attributeValue}
-                </button>
+        {product.isBundle && product.bundleComponents && product.bundleComponents.length > 0 && (
+          <div className="rounded-2xl border border-border bg-surface-alt p-4">
+            <p className="text-sm font-medium text-text">Este kit incluye</p>
+            <ul className="mt-2 flex flex-col gap-1 text-sm text-text-muted">
+              {product.bundleComponents.map((c) => (
+                <li key={c.productId + c.variantSku}>
+                  {c.quantity} × {c.productName}
+                  {c.variantLabel ? ` (${c.variantLabel})` : ""}
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         )}
+
+        {variant &&
+          options.map((option) => (
+            <div key={option.name} className="flex flex-col gap-2">
+              <span className="text-sm font-medium text-text">{option.name}</span>
+              <div className="flex flex-wrap gap-2">
+                {option.values.map((value) => {
+                  const selected = variant.attributes.some((a) => a.name === option.name && a.value === value);
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => {
+                        setSelectedSku(pickVariant(product.variants, variant, option.name, value).sku);
+                        setQuantity(1);
+                      }}
+                      disabled={!selected && !isValueAvailable(product.variants, variant, option.name, value)}
+                      aria-pressed={selected}
+                      className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                        selected
+                          ? "border-primary bg-primary text-on-primary"
+                          : "border-border bg-surface text-text hover:bg-surface-alt"
+                      }`}
+                    >
+                      {value}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
 
         {variant && (
           <div className="flex items-center gap-4">
             <QuantityStepper value={quantity} max={variant.stock} onChange={setQuantity} />
             <span className="text-sm text-text-muted">
-              {variant.stock > 0 ? `${variant.stock} disponibles` : "Sin stock"}
+              {variant.isUniquePiece
+                ? variant.stock > 0
+                  ? "Pieza única: hay una sola unidad"
+                  : "Esta pieza única ya fue vendida"
+                : variant.stock > 0
+                  ? `${variant.stock} disponibles`
+                  : "Sin stock"}
             </span>
           </div>
         )}

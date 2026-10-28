@@ -2,7 +2,7 @@ import type { PaginatedResult } from "@caracol/shared";
 import { sumCents } from "@caracol/shared";
 import { Product, type IProductVariant } from "../models/Product.js";
 import { SupplierPurchase, type SupplierPurchaseDocument } from "../models/SupplierPurchase.js";
-import { NotFoundError } from "../utils/AppError.js";
+import { BadRequestError, NotFoundError } from "../utils/AppError.js";
 import type {
   CreateSupplierPurchaseInput,
   ListSupplierPurchasesQuery,
@@ -36,6 +36,9 @@ export async function createSupplierPurchase(
     const variant = findVariant(product, sku);
     if (!product || !variant) {
       throw new NotFoundError(`Producto o variante no encontrados (${item.variantSku})`);
+    }
+    if (product.isBundle) {
+      throw new BadRequestError(`${product.name} es un kit: la mercadería se compra por componente`);
     }
     return {
       product: product._id,

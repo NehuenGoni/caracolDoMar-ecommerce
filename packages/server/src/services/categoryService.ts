@@ -92,3 +92,27 @@ export async function reorderCategories(input: ReorderCategoriesInput): Promise<
     })),
   );
 }
+
+/** La categoría y todas sus subcategorías (a cualquier profundidad), para filtrar el catálogo. */
+export async function getCategoryWithDescendantIds(id: string): Promise<string[]> {
+  const all = await Category.find({}, { parent: 1 }).lean();
+  const childrenOf = new Map<string, string[]>();
+  for (const category of all) {
+    const parent = category.parent?.toString();
+    if (!parent) continue;
+    childrenOf.set(parent, [...(childrenOf.get(parent) ?? []), category._id.toString()]);
+  }
+
+  const result = [id];
+  // `seen` evita un loop infinito si hubiera un ciclo de parents en datos viejos.
+  const seen = new Set(result);
+  for (const current of result) {
+    for (const child of childrenOf.get(current) ?? []) {
+      if (!seen.has(child)) {
+        seen.add(child);
+        result.push(child);
+      }
+    }
+  }
+  return result;
+}

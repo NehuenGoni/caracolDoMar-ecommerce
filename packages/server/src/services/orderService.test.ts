@@ -40,8 +40,7 @@ async function createOrderFor(customerId: Types.ObjectId, overrides: Partial<Rec
     variants: [
       {
         sku: `SKU-${unique}`,
-        attributeName: "Color",
-        attributeValue: "Verde",
+        attributes: [{ name: "Color", value: "Verde" }],
         price: 250000,
         costPrice: 100000,
         stock: 3,
@@ -60,8 +59,7 @@ async function createOrderFor(customerId: Types.ObjectId, overrides: Partial<Rec
         // El schema de Product fuerza el sku a mayúsculas: hay que usar el
         // valor real guardado, no el string original en minúsculas.
         variantSku: product.variants[0]!.sku,
-        attributeName: "Color",
-        attributeValue: "Verde",
+        variantLabel: "Verde",
         unitPrice: 250000,
         quantity: 2,
         subtotal: 500000,

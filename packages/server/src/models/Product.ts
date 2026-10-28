@@ -9,15 +9,31 @@ export interface IProductImage {
   order: number;
 }
 
+export interface IProductVideo {
+  url: string;
+  source: ImageSource;
+  order: number;
+}
+
+export interface IBundleItem {
+  product: Types.ObjectId;
+  variantSku: string;
+  quantity: number;
+}
+
+export interface IProductVariantAttribute {
+  name: string;
+  value: string;
+}
+
 /**
- * El atributo distintivo de la variante es genérico (nombre/valor) para
- * cubrir distintos rubros de HomeDeco: color, tamaño, presentación, etc.
+ * Los atributos son una lista genérica (nombre/valor): la ropa combina talle y color,
+ * un sahumerio o una vela pueden no tener ninguno.
  */
 export interface IProductVariant {
   _id?: Types.ObjectId;
   sku: string;
-  attributeName: string;
-  attributeValue: string;
+  attributes: IProductVariantAttribute[];
   price: number;
   costPrice: number;
   stock: number;
@@ -29,6 +45,7 @@ export interface IProductVariant {
   width?: number;
   length?: number;
   barcode?: string;
+  isUniquePiece: boolean;
 }
 
 export interface IProduct {
@@ -41,7 +58,10 @@ export interface IProduct {
   isActive: boolean;
   isFeatured: boolean;
   images: IProductImage[];
+  videos: IProductVideo[];
   variants: IProductVariant[];
+  isBundle: boolean;
+  bundleItems: IBundleItem[];
 }
 
 export type ProductDocument = HydratedDocument<IProduct>;
@@ -56,10 +76,35 @@ const productImageSchema = new Schema<IProductImage>(
   { _id: false },
 );
 
+const productVideoSchema = new Schema<IProductVideo>(
+  {
+    url: { type: String, required: true, trim: true },
+    source: { type: String, enum: ["cloudinary", "external"], required: true },
+    order: { type: Number, default: 0 },
+  },
+  { _id: false },
+);
+
+const bundleItemSchema = new Schema<IBundleItem>(
+  {
+    product: { type: Schema.Types.ObjectId, ref: "Product", required: true },
+    variantSku: { type: String, required: true, uppercase: true, trim: true },
+    quantity: { type: Number, required: true, min: 1 },
+  },
+  { _id: false },
+);
+
+const variantAttributeSchema = new Schema<IProductVariantAttribute>(
+  {
+    name: { type: String, required: true, trim: true },
+    value: { type: String, required: true, trim: true },
+  },
+  { _id: false },
+);
+
 const productVariantSchema = new Schema<IProductVariant>({
   sku: { type: String, required: true, uppercase: true, trim: true },
-  attributeName: { type: String, required: true, trim: true },
-  attributeValue: { type: String, required: true, trim: true },
+  attributes: { type: [variantAttributeSchema], default: [] },
   price: { type: Number, required: true, min: 0 },
   costPrice: { type: Number, required: true, min: 0 },
   stock: { type: Number, required: true, min: 0, default: 0 },
@@ -69,6 +114,7 @@ const productVariantSchema = new Schema<IProductVariant>({
   width: { type: Number, min: 0 },
   length: { type: Number, min: 0 },
   barcode: { type: String, trim: true },
+  isUniquePiece: { type: Boolean, default: false },
 });
 
 const productSchema = new Schema<IProduct>(
@@ -82,6 +128,9 @@ const productSchema = new Schema<IProduct>(
     isActive: { type: Boolean, default: true },
     isFeatured: { type: Boolean, default: false },
     images: { type: [productImageSchema], default: [] },
+    videos: { type: [productVideoSchema], default: [] },
+    isBundle: { type: Boolean, default: false },
+    bundleItems: { type: [bundleItemSchema], default: [] },
     variants: {
       type: [productVariantSchema],
       default: [],

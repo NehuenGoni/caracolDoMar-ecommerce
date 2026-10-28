@@ -26,7 +26,7 @@ export function OrderSummaryCard({ order }: { order: Order }) {
               <div>
                 <p className="text-sm font-medium text-text">{item.productName}</p>
                 <p className="text-xs text-text-muted">
-                  {item.attributeName}: {item.attributeValue} · x{item.quantity}
+                  {[item.variantLabel, `x${item.quantity}`].filter(Boolean).join(" · ")}
                 </p>
               </div>
             </div>

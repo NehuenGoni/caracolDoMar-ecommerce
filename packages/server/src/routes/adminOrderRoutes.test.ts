@@ -39,8 +39,7 @@ async function createOrder(status: string = "pending") {
     variants: [
       {
         sku: `SKU-${Math.random().toString(36).slice(2)}`,
-        attributeName: "Color",
-        attributeValue: "Crudo",
+        attributes: [{ name: "Color", value: "Crudo" }],
         price: 300000,
         costPrice: 150000,
         stock: 4,
@@ -56,8 +55,7 @@ async function createOrder(status: string = "pending") {
         product: product._id,
         productName: product.name,
         variantSku: product.variants[0]!.sku,
-        attributeName: "Color",
-        attributeValue: "Crudo",
+        variantLabel: "Crudo",
         unitPrice: 300000,
         quantity: 1,
         subtotal: 300000,

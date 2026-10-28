@@ -70,7 +70,7 @@ export function StoreSaleReturnForm({ sale, onReturned }: StoreSaleReturnFormPro
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-text">{item.productName}</p>
                 <p className="text-xs text-text-muted">
-                  {item.attributeValue} · {left > 0 ? `se pueden devolver ${left}` : "ya devuelto"}
+                  {[item.variantLabel, left > 0 ? `se pueden devolver ${left}` : "ya devuelto"].filter(Boolean).join(" · ")}
                 </p>
               </div>
               {left > 0 && (

@@ -16,8 +16,7 @@ export interface IOrderItem {
   product: Types.ObjectId;
   productName: string;
   variantSku: string;
-  attributeName: string;
-  attributeValue: string;
+  variantLabel: string;
   image?: string;
   unitPrice: number;
   quantity: number;
@@ -104,8 +103,7 @@ const orderItemSchema = new Schema<IOrderItem>(
     product: { type: Schema.Types.ObjectId, ref: "Product", required: true },
     productName: { type: String, required: true },
     variantSku: { type: String, required: true },
-    attributeName: { type: String, required: true },
-    attributeValue: { type: String, required: true },
+    variantLabel: { type: String, default: "" },
     image: { type: String },
     unitPrice: { type: Number, required: true, min: 0 },
     quantity: { type: Number, required: true, min: 1 },

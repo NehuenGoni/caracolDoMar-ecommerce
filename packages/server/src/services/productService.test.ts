@@ -15,8 +15,7 @@ const defaultQuery = { page: 1, limit: 20 } as const;
 function buildVariant(sku: string, overrides: Partial<Record<string, unknown>> = {}) {
   return {
     sku,
-    attributeName: "Color",
-    attributeValue: "Verde",
+    attributes: [{ name: "Color", value: "Verde" }],
     price: 250000,
     costPrice: 120000,
     stock: 5,

@@ -15,8 +15,8 @@ export interface StoreSaleItem {
   product: string;
   productName: string;
   variantSku: string;
-  attributeName: string;
-  attributeValue: string;
+  /** Variante formateada para mostrar ("Rojo / M"); vacía si no tiene atributos. */
+  variantLabel: string;
   image?: string;
   /** Centavos, tomado del catálogo al momento de la venta. */
   unitPrice: number;
@@ -110,8 +110,8 @@ export interface StoreProductLookup {
   productName: string;
   image?: string;
   variantSku: string;
-  attributeName: string;
-  attributeValue: string;
+  /** Variante formateada para mostrar ("Rojo / M"); vacía si no tiene atributos. */
+  variantLabel: string;
   price: number;
   stock: number;
   barcode?: string;

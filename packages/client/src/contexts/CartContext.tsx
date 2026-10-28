@@ -15,8 +15,7 @@ export interface AddCartItemInput {
   name: string;
   slug: string;
   image?: string;
-  attributeName: string;
-  attributeValue: string;
+  variantLabel: string;
   unitPrice: number;
   availableStock: number;
 }
@@ -39,8 +38,7 @@ function upsertLocalItem(items: CartItemView[], input: AddCartItemInput): CartIt
     slug: input.slug,
     image: input.image,
     variantSku: input.variantSku,
-    attributeName: input.attributeName,
-    attributeValue: input.attributeValue,
+    variantLabel: input.variantLabel,
     unitPrice: input.unitPrice,
     quantity,
     subtotal: input.unitPrice * quantity,

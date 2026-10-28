@@ -1,22 +1,28 @@
 import { useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { CategoryFilter } from "@/components/catalog/CategoryFilter";
+import { ProductFilters } from "@/components/catalog/ProductFilters";
 import { ProductGrid } from "@/components/catalog/ProductGrid";
 import { SearchBar } from "@/components/catalog/SearchBar";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { useCategories } from "@/hooks/useCategories";
+import { useCatalogFacets } from "@/hooks/useCatalogFacets";
 import { useProducts } from "@/hooks/useProducts";
+import { filtersFromParams, filtersToApi, filtersToParams } from "@/lib/catalogFilters";
 
 const PAGE_SIZE = 12;
 
 export default function Catalog() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { categories } = useCategories();
+  const facets = useCatalogFacets();
 
   const categorySlug = searchParams.get("categoria") ?? undefined;
   const search = searchParams.get("q") ?? "";
   const page = Number(searchParams.get("page") ?? "1");
+
+  const filters = useMemo(() => filtersFromParams(searchParams), [searchParams]);
 
   const activeCategory = useMemo(
     () => categories.find((c) => c.slug === categorySlug),
@@ -28,6 +34,7 @@ export default function Catalog() {
     limit: PAGE_SIZE,
     category: activeCategory?._id,
     search: search || undefined,
+    ...filtersToApi(filters),
   });
 
   function updateParams(next: Record<string, string | undefined>) {
@@ -50,6 +57,7 @@ export default function Catalog() {
           activeSlug={categorySlug}
           onSelect={(category) => updateParams({ categoria: category?.slug })}
         />
+        <ProductFilters filters={filters} facets={facets} onChange={(next) => updateParams(filtersToParams(next))} />
       </div>
 
       {isLoading ? (

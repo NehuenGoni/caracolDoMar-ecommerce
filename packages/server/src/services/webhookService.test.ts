@@ -32,8 +32,7 @@ async function createOrderWithProduct(stockAfterCheckout = 3) {
     variants: [
       {
         sku: "VELA-1",
-        attributeName: "Color",
-        attributeValue: "Verde",
+        attributes: [{ name: "Color", value: "Verde" }],
         price: 250000,
         costPrice: 100000,
         stock: stockAfterCheckout,
@@ -50,8 +49,7 @@ async function createOrderWithProduct(stockAfterCheckout = 3) {
         product: product._id,
         productName: "Vela",
         variantSku: "VELA-1",
-        attributeName: "Color",
-        attributeValue: "Verde",
+        variantLabel: "Verde",
         unitPrice: 250000,
         quantity: 2,
         subtotal: 500000,

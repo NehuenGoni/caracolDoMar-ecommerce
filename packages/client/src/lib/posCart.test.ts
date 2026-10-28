@@ -6,8 +6,7 @@ const vela: StoreProductLookup = {
   productId: "p1",
   productName: "Vela",
   variantSku: "VELA-1",
-  attributeName: "Aroma",
-  attributeValue: "Vainilla",
+  variantLabel: "Vainilla",
   price: 100000,
   stock: 3,
 };

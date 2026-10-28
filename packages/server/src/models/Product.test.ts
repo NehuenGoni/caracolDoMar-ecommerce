@@ -10,8 +10,7 @@ afterAll(closeTestDB);
 function buildVariant(overrides: Partial<Record<string, unknown>> = {}) {
   return {
     sku: "vela-lavanda-m",
-    attributeName: "Tamaño",
-    attributeValue: "Mediano",
+    attributes: [{ name: "Tamaño", value: "Mediano" }],
     price: 350000,
     costPrice: 180000,
     stock: 10,

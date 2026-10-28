@@ -1,6 +1,9 @@
+import type { BundleComponent } from "@caracol/shared";
 import { useState, type FormEvent } from "react";
+import { BundleItemsEditor } from "@/components/admin/BundleItemsEditor";
 import { ProductImagesEditor } from "@/components/admin/ProductImagesEditor";
 import { ProductVariantsEditor } from "@/components/admin/ProductVariantsEditor";
+import { ProductVideosEditor } from "@/components/admin/ProductVideosEditor";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { InlineMessage } from "@/components/ui/InlineMessage";
@@ -11,7 +14,8 @@ import { ApiError } from "@/lib/apiClient";
 import type { ProductInput } from "@/lib/adminProductsApi";
 
 interface ProductFormProps {
-  initialValue?: Partial<ProductInput>;
+  /** Al editar viene el producto completo; `bundleComponents` trae los nombres de los componentes de un kit. */
+  initialValue?: Partial<ProductInput> & { bundleComponents?: BundleComponent[] };
   onSubmit: (input: ProductInput) => Promise<void>;
   submitLabel?: string;
 }
@@ -27,8 +31,11 @@ function toValues(initial?: Partial<ProductInput>): ProductInput {
     isActive: initial?.isActive ?? true,
     isFeatured: initial?.isFeatured ?? false,
     images: initial?.images ?? [],
+    videos: initial?.videos ?? [],
+    isBundle: initial?.isBundle ?? false,
+    bundleItems: initial?.bundleItems ?? [],
     variants: initial?.variants ?? [
-      { sku: "", attributeName: "", attributeValue: "", price: 0, costPrice: 0, stock: 0, lowStockThreshold: 0 },
+      { sku: "", attributes: [], price: 0, costPrice: 0, stock: 0, lowStockThreshold: 0, isUniquePiece: false },
     ],
   };
 }
@@ -40,6 +47,8 @@ export function ProductForm({ initialValue, onSubmit, submitLabel = "Guardar pro
   const [lockedSkus] = useState<ReadonlySet<string>>(
     () => new Set((initialValue?.variants ?? []).map((v) => v.sku)),
   );
+  const isEditing = initialValue !== undefined;
+  const [components, setComponents] = useState<BundleComponent[]>(() => initialValue?.bundleComponents ?? []);
   const [tagsText, setTagsText] = useState(() => (initialValue?.tags ?? []).join(", "));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,8 +57,23 @@ export function ProductForm({ initialValue, onSubmit, submitLabel = "Guardar pro
     setValues((prev) => ({ ...prev, [key]: value }));
   }
 
+  /** Un kit tiene una sola variante (el precio del kit) y sin stock propio. */
+  function toggleBundle(isBundle: boolean) {
+    setValues((prev) => ({
+      ...prev,
+      isBundle,
+      variants: isBundle
+        ? prev.variants.slice(0, 1).map((v) => ({ ...v, isUniquePiece: false, stock: 0, lowStockThreshold: 0 }))
+        : prev.variants,
+    }));
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (values.isBundle && components.length === 0) {
+      setError("Agregá al menos un componente al kit");
+      return;
+    }
     setIsSubmitting(true);
     setError(null);
     try {
@@ -57,7 +81,14 @@ export function ProductForm({ initialValue, onSubmit, submitLabel = "Guardar pro
         .split(",")
         .map((t) => t.trim())
         .filter(Boolean);
-      await onSubmit({ ...values, tags, slug: values.slug || undefined });
+      await onSubmit({
+        ...values,
+        tags,
+        slug: values.slug || undefined,
+        bundleItems: values.isBundle
+          ? components.map((c) => ({ product: c.productId, variantSku: c.variantSku, quantity: c.quantity }))
+          : [],
+      });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "No pudimos guardar el producto");
     } finally {
@@ -127,8 +158,29 @@ export function ProductForm({ initialValue, onSubmit, submitLabel = "Guardar pro
         </label>
       </div>
 
+      <label className="flex items-start gap-2 text-sm text-text">
+        <input
+          type="checkbox"
+          checked={values.isBundle}
+          disabled={isEditing}
+          onChange={(e) => toggleBundle(e.target.checked)}
+          className="mt-0.5 size-4 rounded border-border accent-accent"
+        />
+        <span>
+          Es un kit o combo
+          <span className="block text-xs text-text-muted">
+            {isEditing
+              ? "Un producto no se puede convertir en kit (ni al revés)."
+              : "Se arma con otros productos y descuenta el stock de cada uno cuando se vende."}
+          </span>
+        </span>
+      </label>
+
       <ProductImagesEditor images={values.images} onChange={(images) => set("images", images)} />
+      <ProductVideosEditor videos={values.videos} onChange={(videos) => set("videos", videos)} />
+      {values.isBundle && <BundleItemsEditor components={components} onChange={setComponents} />}
       <ProductVariantsEditor
+        isBundle={values.isBundle}
         variants={values.variants}
         lockedSkus={lockedSkus}
         onChange={(variants) => set("variants", variants)}

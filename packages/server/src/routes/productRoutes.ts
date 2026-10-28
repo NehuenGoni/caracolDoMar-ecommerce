@@ -12,4 +12,6 @@ productRouter.get(
   validateRequest(listProductsQuerySchema, "query"),
   productController.listProducts,
 );
+// Antes de "/:slug": si no, "facets" se interpretaría como un slug.
+productRouter.get("/facets", productController.getFacets);
 productRouter.get("/:slug", optionalAuthenticate, productController.getProductBySlug);

@@ -33,6 +33,11 @@ export function ProductCard({ product }: { product: Product }) {
               Sin stock
             </span>
           )}
+          {!outOfStock && (product.isBundle || product.variants.some((v) => v.isUniquePiece)) && (
+            <span className="absolute left-3 top-3 rounded-full bg-primary/90 px-2.5 py-1 text-xs font-medium text-on-primary">
+              {product.isBundle ? "Kit" : "Pieza única"}
+            </span>
+          )}
         </div>
         <div className="flex flex-1 flex-col gap-1 p-4">
           <p className="font-display text-base text-text">{product.name}</p>

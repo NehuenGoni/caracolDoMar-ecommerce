@@ -29,9 +29,7 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }: CartItemRowPro
             <Link to={`/productos/${item.slug}`} className="font-medium text-text hover:text-accent-deep">
               {item.name}
             </Link>
-            <p className="text-xs text-text-muted">
-              {item.attributeName}: {item.attributeValue}
-            </p>
+            {item.variantLabel && <p className="text-xs text-text-muted">{item.variantLabel}</p>}
           </div>
           <button
             type="button"

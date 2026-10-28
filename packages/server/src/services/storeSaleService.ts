@@ -6,6 +6,7 @@ import {
   type StorePaymentMethod,
   type StoreProductLookup,
   type StoreSalesSummary,
+  formatVariantLabel,
 } from "@caracol/shared";
 import type { FilterQuery } from "mongoose";
 import { getNextSequence } from "../models/Counter.js";
@@ -20,6 +21,7 @@ import type {
   StoreSalesSummaryQuery,
 } from "../validators/storeSaleValidators.js";
 import { computeTotals, requireOpenSession } from "./cashSessionService.js";
+import { loadComponents, sellableStock } from "./bundleService.js";
 import { restockItems, decrementStock } from "./checkoutService.js";
 import { sendStoreSaleReceiptEmail } from "./email/emailService.js";
 import { recordMovements, returnStock } from "./inventoryService.js";
@@ -55,6 +57,7 @@ export async function createStoreSale(
   const productIds = [...new Set(input.items.map((i) => i.productId))];
   const products = await Product.find({ _id: { $in: productIds }, isActive: true });
   const productById = new Map(products.map((p) => [p._id.toString(), p]));
+  const components = await loadComponents(products.filter((p) => p.isBundle));
 
   // Los precios siempre salen del catálogo: nunca se confía en lo que manda el cliente.
   const items: IStoreSaleItem[] = input.items.map((line) => {
@@ -62,8 +65,8 @@ export async function createStoreSale(
     const product = productById.get(line.productId);
     const variant = product?.variants.find((v) => v.sku === sku);
     if (!product || !variant) throw new NotFoundError(`Producto no disponible: ${sku}`);
-    if (variant.stock < line.quantity) {
-      throw new BadRequestError(`Stock insuficiente para ${product.name} (${variant.attributeValue})`);
+    if (sellableStock(product, variant.stock, components) < line.quantity) {
+      throw new BadRequestError(`Stock insuficiente para ${product.name} (${formatVariantLabel(variant.attributes)})`);
     }
 
     const gross = variant.price * line.quantity;
@@ -72,8 +75,7 @@ export async function createStoreSale(
       product: product._id,
       productName: product.name,
       variantSku: sku,
-      attributeName: variant.attributeName,
-      attributeValue: variant.attributeValue,
+      variantLabel: formatVariantLabel(variant.attributes),
       image: [...product.images].sort((a, b) => a.order - b.order)[0]?.url,
       unitPrice: variant.price,
       quantity: line.quantity,
@@ -326,10 +328,9 @@ export async function lookupByCode(code: string): Promise<StoreProductLookup> {
     productName: product.name,
     image: [...product.images].sort((a, b) => a.order - b.order)[0]?.url,
     variantSku: variant.sku,
-    attributeName: variant.attributeName,
-    attributeValue: variant.attributeValue,
+    variantLabel: formatVariantLabel(variant.attributes),
     price: variant.price,
-    stock: variant.stock,
+    stock: sellableStock(product, variant.stock, await loadComponents([product])),
     barcode: variant.barcode,
   };
 }

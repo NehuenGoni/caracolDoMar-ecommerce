@@ -1,5 +1,6 @@
-import type { PaginatedResult, StockMovementType } from "@caracol/shared";
+import { formatVariantLabel, type PaginatedResult, type StockMovementType } from "@caracol/shared";
 import type { FilterQuery } from "mongoose";
+import { expandBundleItems } from "./bundleService.js";
 import { Product, type IProduct, type IProductVariant } from "../models/Product.js";
 import {
   StockMovement,
@@ -58,7 +59,8 @@ export async function returnStock(
   meta: { reference?: string; note?: string; createdBy?: string },
 ): Promise<void> {
   const changes: StockChange[] = [];
-  for (const item of items) {
+  // Un kit repone el stock de sus componentes, no el suyo.
+  for (const item of await expandBundleItems(items)) {
     const before = await Product.findOneAndUpdate(
       { _id: item.product, "variants.sku": item.variantSku },
       { $inc: { "variants.$.stock": item.quantity } },
@@ -90,6 +92,9 @@ export async function adjustStock(input: AdjustStockInput, adminId: string): Pro
   const product = await Product.findOne({ _id: input.productId });
   const variant = findVariant(product, sku);
   if (!product || !variant) throw new NotFoundError("Producto o variante no encontrados");
+  if (product.isBundle) {
+    throw new BadRequestError("Un kit no tiene stock propio: ajustá el stock de sus componentes");
+  }
 
   const previousStock = variant.stock;
   const newStock = previousStock + input.quantityChange;
@@ -151,17 +156,18 @@ export interface LowStockVariant {
   productId: string;
   productName: string;
   variantSku: string;
-  attributeName: string;
-  attributeValue: string;
+  variantLabel: string;
   stock: number;
   lowStockThreshold: number;
 }
 
 export async function listLowStock(): Promise<LowStockVariant[]> {
   // Se filtra en la base: cargar todo el catálogo en memoria no escala.
-  return Product.aggregate<LowStockVariant>([
-    { $match: { isActive: true } },
+  const rows = await Product.aggregate<Omit<LowStockVariant, "variantLabel"> & { attributes: IProductVariant["attributes"] }>([
+    // Los kits no tienen stock propio y las piezas únicas no se reponen: no son "stock bajo".
+    { $match: { isActive: true, isBundle: { $ne: true } } },
     { $unwind: "$variants" },
+    { $match: { "variants.isUniquePiece": { $ne: true } } },
     { $match: { $expr: { $lte: ["$variants.stock", "$variants.lowStockThreshold"] } } },
     {
       $project: {
@@ -169,11 +175,11 @@ export async function listLowStock(): Promise<LowStockVariant[]> {
         productId: { $toString: "$_id" },
         productName: "$name",
         variantSku: "$variants.sku",
-        attributeName: "$variants.attributeName",
-        attributeValue: "$variants.attributeValue",
+        attributes: "$variants.attributes",
         stock: "$variants.stock",
         lowStockThreshold: "$variants.lowStockThreshold",
       },
     },
   ]);
+  return rows.map(({ attributes, ...row }) => ({ ...row, variantLabel: formatVariantLabel(attributes) }));
 }

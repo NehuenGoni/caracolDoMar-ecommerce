@@ -1,3 +1,4 @@
+import { formatVariantLabel } from "@caracol/shared";
 import type { Product, ProductVariant } from "@caracol/shared";
 import { Search, X } from "lucide-react";
 import { useState } from "react";
@@ -13,9 +14,11 @@ interface ProductVariantPickerProps {
   value: VariantSelection | null;
   onChange: (selection: VariantSelection) => void;
   onClear: () => void;
+  /** Para ocultar productos que no corresponden (por ejemplo, kits o archivados al armar un kit). */
+  filter?: (product: Product) => boolean;
 }
 
-export function ProductVariantPicker({ value, onChange, onClear }: ProductVariantPickerProps) {
+export function ProductVariantPicker({ value, onChange, onClear, filter }: ProductVariantPickerProps) {
   const [search, setSearch] = useState("");
   const { data } = useAdminProducts({ search: search || undefined, limit: 8, includeInactive: true });
 
@@ -25,7 +28,7 @@ export function ProductVariantPicker({ value, onChange, onClear }: ProductVarian
         <div className="min-w-0">
           <p className="truncate text-sm font-medium text-text">{value.product.name}</p>
           <p className="text-xs text-text-muted">
-            {value.variant.attributeName}: {value.variant.attributeValue} · SKU {value.variant.sku}
+            {[formatVariantLabel(value.variant.attributes), `SKU ${value.variant.sku}`].filter(Boolean).join(" · ")}
           </p>
         </div>
         <button
@@ -53,17 +56,20 @@ export function ProductVariantPicker({ value, onChange, onClear }: ProductVarian
       </div>
       {search && (
         <div className="flex max-h-64 flex-col divide-y divide-border overflow-y-auto rounded-xl border border-border">
-          {data?.items.map((product) =>
+          {data?.items.filter(filter ?? (() => true)).map((product) =>
             product.variants.map((variant) => (
               <button
                 key={variant.sku}
                 type="button"
-                onClick={() => onChange({ product, variant })}
+                onClick={() => {
+                  onChange({ product, variant });
+                  setSearch("");
+                }}
                 className="flex flex-col items-start px-4 py-2.5 text-left text-sm hover:bg-surface-alt"
               >
                 <span className="font-medium text-text">{product.name}</span>
                 <span className="text-xs text-text-muted">
-                  {variant.attributeName}: {variant.attributeValue} · SKU {variant.sku} · stock {variant.stock}
+                  {[formatVariantLabel(variant.attributes), `SKU ${variant.sku}`, `stock ${variant.stock}`].filter(Boolean).join(" · ")}
                 </span>
               </button>
             )),

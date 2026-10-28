@@ -27,8 +27,7 @@ const sampleItemInput = {
   quantity: 2,
   name: "Vela",
   slug: "vela",
-  attributeName: "Color",
-  attributeValue: "Verde",
+  variantLabel: "Verde",
   unitPrice: 250000,
   availableStock: 5,
 };

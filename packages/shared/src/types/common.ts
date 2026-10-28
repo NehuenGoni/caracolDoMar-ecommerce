@@ -9,6 +9,13 @@ export interface ImageRef {
   order: number;
 }
 
+/** Video corto de producto (los reels que ya usa la tienda para mostrarlo). */
+export interface VideoRef {
+  url: string;
+  source: ImageSource;
+  order: number;
+}
+
 export interface PaginationParams {
   page?: number;
   limit?: number;

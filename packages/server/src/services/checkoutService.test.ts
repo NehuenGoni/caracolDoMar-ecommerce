@@ -83,8 +83,7 @@ async function createProductWithStock(stock = 5) {
     variants: [
       {
         sku,
-        attributeName: "Color",
-        attributeValue: "Verde",
+        attributes: [{ name: "Color", value: "Verde" }],
         price: 250000,
         costPrice: 100000,
         stock,
@@ -263,8 +262,7 @@ describe("decrementStock", () => {
     const category = await Category.create({ name: `Cat-${unique}` });
     const variant = (sku: string, attributeValue: string, stock: number) => ({
       sku,
-      attributeName: "Color",
-      attributeValue,
+      attributes: [{ name: "Color", value: attributeValue }],
       price: 100000,
       costPrice: 50000,
       stock,

@@ -138,7 +138,7 @@ function escapeHtml(value: string): string {
 export interface StoreSaleReceiptData {
   saleNumber: number;
   createdAt: Date;
-  items: { productName: string; attributeValue: string; quantity: number; subtotal: number }[];
+  items: { productName: string; variantLabel: string; quantity: number; subtotal: number }[];
   subtotal: number;
   discountAmount: number;
   total: number;
@@ -154,7 +154,7 @@ export function storeSaleReceiptTemplate(
   const rows = sale.items
     .map(
       (item) =>
-        `<tr><td style="padding:4px 0;">${item.quantity} × ${escapeHtml(item.productName)} <span style="color:${BRAND.textMuted};">(${escapeHtml(item.attributeValue)})</span></td><td style="padding:4px 0;text-align:right;">${formatMoney(item.subtotal)}</td></tr>`,
+        `<tr><td style="padding:4px 0;">${item.quantity} × ${escapeHtml(item.productName)} ${item.variantLabel ? `<span style="color:${BRAND.textMuted};">(${escapeHtml(item.variantLabel)})</span>` : ""}</td><td style="padding:4px 0;text-align:right;">${formatMoney(item.subtotal)}</td></tr>`,
     )
     .join("");
   const discountRow =

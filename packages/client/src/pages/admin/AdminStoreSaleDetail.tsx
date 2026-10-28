@@ -79,7 +79,7 @@ export default function AdminStoreSaleDetail() {
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-text">{item.productName}</p>
                     <p className="text-xs text-text-muted">
-                      {item.attributeName}: {item.attributeValue} · {item.quantity} × {formatMoney(item.unitPrice)}
+                      {[item.variantLabel, `${item.quantity} × ${formatMoney(item.unitPrice)}`].filter(Boolean).join(" · ")}
                       {item.discount > 0 && ` · desc. ${formatMoney(item.discount)}`}
                     </p>
                   </div>

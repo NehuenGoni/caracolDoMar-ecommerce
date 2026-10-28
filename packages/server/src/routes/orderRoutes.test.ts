@@ -28,8 +28,7 @@ async function createCustomerWithOrder() {
     variants: [
       {
         sku: "MANTEL-1",
-        attributeName: "Color",
-        attributeValue: "Crudo",
+        attributes: [{ name: "Color", value: "Crudo" }],
         price: 300000,
         costPrice: 150000,
         stock: 4,
@@ -45,8 +44,7 @@ async function createCustomerWithOrder() {
         product: product._id,
         productName: "Mantel",
         variantSku: "MANTEL-1",
-        attributeName: "Color",
-        attributeValue: "Crudo",
+        variantLabel: "Crudo",
         unitPrice: 300000,
         quantity: 1,
         subtotal: 300000,

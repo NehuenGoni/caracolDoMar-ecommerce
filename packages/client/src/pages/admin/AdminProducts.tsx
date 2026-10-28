@@ -102,6 +102,8 @@ export default function AdminProducts() {
                 <div className="flex shrink-0 items-center gap-3">
                   {!product.isActive && <Badge tone="neutral">Inactivo</Badge>}
                   {product.isFeatured && <Badge tone="accent">Destacado</Badge>}
+                  {product.isBundle && <Badge tone="neutral">Kit</Badge>}
+                  {product.variants.some((v) => v.isUniquePiece) && <Badge tone="neutral">Pieza única</Badge>}
                   <button
                     type="button"
                     onClick={() => setPendingDelete(product._id)}

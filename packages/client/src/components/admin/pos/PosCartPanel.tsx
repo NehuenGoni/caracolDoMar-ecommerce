@@ -106,7 +106,7 @@ export function PosCartPanel({ cart, totals, dispatch, onSold }: PosCartPanelPro
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-text">{line.productName}</p>
                   <p className="text-xs text-text-muted">
-                    {line.attributeName}: {line.attributeValue} · {formatMoney(line.unitPrice)} c/u
+                    {[line.variantLabel, `${formatMoney(line.unitPrice)} c/u`].filter(Boolean).join(" · ")}
                   </p>
                 </div>
                 <button

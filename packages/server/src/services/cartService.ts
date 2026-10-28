@@ -1,6 +1,8 @@
+import { formatVariantLabel } from "@caracol/shared";
 import { Types } from "mongoose";
 import { Cart, type CartDocument, type ICartItem } from "../models/Cart.js";
-import { Product, type IProductVariant } from "../models/Product.js";
+import { Product, type IProductVariant, type ProductDocument } from "../models/Product.js";
+import { loadComponents, sellableStock } from "./bundleService.js";
 import { BadRequestError, NotFoundError } from "../utils/AppError.js";
 import type { AddCartItemInput, MergeCartInput } from "../validators/cartValidators.js";
 
@@ -10,8 +12,7 @@ export interface EnrichedCartItem {
   slug: string;
   image?: string;
   variantSku: string;
-  attributeName: string;
-  attributeValue: string;
+  variantLabel: string;
   unitPrice: number;
   quantity: number;
   subtotal: number;
@@ -41,6 +42,7 @@ async function enrichCart(cart: CartDocument): Promise<EnrichedCart> {
   const productIds = [...new Set(cart.items.map((item) => item.product.toString()))];
   const products = await Product.find({ _id: { $in: productIds } });
   const productById = new Map(products.map((p) => [p._id.toString(), p]));
+  const components = await loadComponents(products.filter((p) => p.isBundle));
 
   const validItems: ICartItem[] = [];
   const enrichedItems: EnrichedCartItem[] = [];
@@ -57,12 +59,11 @@ async function enrichCart(cart: CartDocument): Promise<EnrichedCart> {
       slug: product.slug,
       image: product.images[0]?.url,
       variantSku: variant.sku,
-      attributeName: variant.attributeName,
-      attributeValue: variant.attributeValue,
+      variantLabel: formatVariantLabel(variant.attributes),
       unitPrice: variant.price,
       quantity: item.quantity,
       subtotal: variant.price * item.quantity,
-      availableStock: variant.stock,
+      availableStock: sellableStock(product, variant.stock, components),
     });
   }
 
@@ -73,6 +74,12 @@ async function enrichCart(cart: CartDocument): Promise<EnrichedCart> {
 
   const subtotal = enrichedItems.reduce((sum, i) => sum + i.subtotal, 0);
   return { items: enrichedItems, subtotal };
+}
+
+/** Stock que se puede comprar de una variante: el propio, o el que permiten los componentes si es un kit. */
+async function availableFor(product: ProductDocument, variant: IProductVariant): Promise<number> {
+  if (!product.isBundle) return variant.stock;
+  return sellableStock(product, variant.stock, await loadComponents([product]));
 }
 
 function findVariant(
@@ -98,7 +105,7 @@ export async function addItem(userId: string, input: AddCartItemInput): Promise<
     (item) => item.product.toString() === input.productId && item.variantSku === sku,
   );
   const newQuantity = (existing?.quantity ?? 0) + input.quantity;
-  if (newQuantity > variant.stock) {
+  if (newQuantity > (await availableFor(product, variant))) {
     throw new BadRequestError("Stock insuficiente para la cantidad solicitada");
   }
 
@@ -124,8 +131,8 @@ export async function updateItemQuantity(
 
   const product = await Product.findById(productId);
   const variant = findVariant(product, sku);
-  if (!variant) throw new NotFoundError("Variante no encontrada");
-  if (quantity > variant.stock) {
+  if (!product || !variant) throw new NotFoundError("Variante no encontrada");
+  if (quantity > (await availableFor(product, variant))) {
     throw new BadRequestError("Stock insuficiente para la cantidad solicitada");
   }
 
@@ -163,6 +170,7 @@ export async function mergeAnonymousCart(userId: string, input: MergeCartInput):
   const productIds = [...new Set(input.items.map((i) => i.productId))];
   const products = await Product.find({ _id: { $in: productIds }, isActive: true });
   const productById = new Map(products.map((p) => [p._id.toString(), p]));
+  const components = await loadComponents(products.filter((p) => p.isBundle));
 
   for (const localItem of input.items) {
     const sku = localItem.variantSku.toUpperCase();
@@ -173,7 +181,10 @@ export async function mergeAnonymousCart(userId: string, input: MergeCartInput):
     const existing = cart.items.find(
       (i) => i.product.toString() === localItem.productId && i.variantSku === sku,
     );
-    const combinedQuantity = Math.min((existing?.quantity ?? 0) + localItem.quantity, variant.stock);
+    const combinedQuantity = Math.min(
+      (existing?.quantity ?? 0) + localItem.quantity,
+      sellableStock(product, variant.stock, components),
+    );
     if (combinedQuantity <= 0) continue;
 
     if (existing) {

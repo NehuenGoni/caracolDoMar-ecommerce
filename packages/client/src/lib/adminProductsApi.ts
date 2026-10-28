@@ -1,4 +1,10 @@
-import type { PaginatedResult, Product } from "@caracol/shared";
+import type {
+  BundleItem,
+  PaginatedResult,
+  Product,
+  ProductVariantAttribute,
+  VideoRef,
+} from "@caracol/shared";
 import { apiDelete, apiGet, apiPatch, apiPost } from "./apiClient.js";
 
 export interface AdminListProductsParams {
@@ -12,8 +18,7 @@ export interface AdminListProductsParams {
 
 export interface ProductVariantInput {
   sku: string;
-  attributeName: string;
-  attributeValue: string;
+  attributes: ProductVariantAttribute[];
   price: number;
   costPrice: number;
   stock: number;
@@ -25,6 +30,8 @@ export interface ProductVariantInput {
   width?: number;
   length?: number;
   barcode?: string;
+  /** Pieza única: una sola unidad, sale de la tienda al venderse. */
+  isUniquePiece?: boolean;
 }
 
 export interface ProductImageInput {
@@ -44,7 +51,11 @@ export interface ProductInput {
   isActive?: boolean;
   isFeatured?: boolean;
   images: ProductImageInput[];
+  videos: VideoRef[];
   variants: ProductVariantInput[];
+  /** Solo se define al crear: un producto no se convierte en kit después. */
+  isBundle: boolean;
+  bundleItems: BundleItem[];
 }
 
 function buildQuery(params: Record<string, unknown>): string {

@@ -5,8 +5,7 @@ export interface CartItemView {
   slug: string;
   image?: string;
   variantSku: string;
-  attributeName: string;
-  attributeValue: string;
+  variantLabel: string;
   unitPrice: number;
   quantity: number;
   subtotal: number;

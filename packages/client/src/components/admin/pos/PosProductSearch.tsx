@@ -1,5 +1,5 @@
 import type { Product, ProductVariant, StoreProductLookup } from "@caracol/shared";
-import { formatMoney } from "@caracol/shared";
+import { formatMoney, formatVariantLabel } from "@caracol/shared";
 import { ScanBarcode } from "lucide-react";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { InlineMessage } from "@/components/ui/InlineMessage";
@@ -16,8 +16,7 @@ function toLookup(product: Product, variant: ProductVariant): StoreProductLookup
     productName: product.name,
     image: product.images[0]?.url,
     variantSku: variant.sku,
-    attributeName: variant.attributeName,
-    attributeValue: variant.attributeValue,
+    variantLabel: formatVariantLabel(variant.attributes),
     price: variant.price,
     stock: variant.stock,
     barcode: variant.barcode,
@@ -122,8 +121,9 @@ export function PosProductSearch({ onSelect }: PosProductSearchProps) {
                   <span className="min-w-0">
                     <span className="block truncate font-medium text-text">{product.name}</span>
                     <span className="block text-xs text-text-muted">
-                      {variant.attributeName}: {variant.attributeValue} · SKU {variant.sku} ·{" "}
-                      {outOfStock ? "sin stock" : `stock ${variant.stock}`}
+                      {[formatVariantLabel(variant.attributes), `SKU ${variant.sku}`, outOfStock ? "sin stock" : `stock ${variant.stock}`]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </span>
                   </span>
                   <span className="shrink-0 font-medium tabular-nums text-text">{formatMoney(variant.price)}</span>

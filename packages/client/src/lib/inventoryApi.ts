@@ -20,8 +20,7 @@ export interface LowStockVariant {
   productId: string;
   productName: string;
   variantSku: string;
-  attributeName: string;
-  attributeValue: string;
+  variantLabel: string;
   stock: number;
   lowStockThreshold: number;
 }

@@ -47,7 +47,7 @@ export default function AdminInventory() {
                   <div>
                     <p className="text-sm font-medium text-text">{item.productName}</p>
                     <p className="text-xs text-text-muted">
-                      {item.attributeName}: {item.attributeValue} · SKU {item.variantSku}
+                      {[item.variantLabel, `SKU ${item.variantSku}`].filter(Boolean).join(" · ")}
                     </p>
                   </div>
                   <Badge tone="warning">{item.stock} en stock</Badge>

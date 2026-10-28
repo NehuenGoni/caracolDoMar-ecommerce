@@ -18,8 +18,7 @@ async function createProduct(stock = 10, lowStockThreshold = 2) {
     variants: [
       {
         sku: `SKU-${unique}`,
-        attributeName: "Color",
-        attributeValue: "Verde",
+        attributes: [{ name: "Color", value: "Verde" }],
         price: 250000,
         costPrice: 100000,
         stock,

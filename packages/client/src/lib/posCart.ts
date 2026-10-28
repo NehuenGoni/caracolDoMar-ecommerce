@@ -6,8 +6,7 @@ export interface PosLine {
   productName: string;
   image?: string;
   variantSku: string;
-  attributeName: string;
-  attributeValue: string;
+  variantLabel: string;
   /** Centavos. Solo para mostrar: el servidor siempre recalcula con el precio del catálogo. */
   unitPrice: number;
   stock: number;
@@ -56,8 +55,7 @@ export function posCartReducer(state: PosCartState, action: PosCartAction): PosC
             productName: product.productName,
             image: product.image,
             variantSku: product.variantSku,
-            attributeName: product.attributeName,
-            attributeValue: product.attributeValue,
+            variantLabel: product.variantLabel,
             unitPrice: product.price,
             stock: product.stock,
             quantity: 1,

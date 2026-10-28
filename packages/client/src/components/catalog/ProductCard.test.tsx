@@ -14,11 +14,13 @@ function buildProduct(overrides: Partial<Product> = {}): Product {
     isActive: true,
     isFeatured: false,
     images: [],
+    videos: [],
+    isBundle: false,
+    bundleItems: [],
     variants: [
       {
         sku: "VELA-1",
-        attributeName: "Color",
-        attributeValue: "Verde",
+        attributes: [{ name: "Color", value: "Verde" }],
         price: 250000,
         costPrice: 100000,
         stock: 5,
@@ -52,8 +54,7 @@ describe("ProductCard", () => {
         variants: [
           {
             sku: "VELA-1",
-            attributeName: "Tamaño",
-            attributeValue: "Chico",
+            attributes: [{ name: "Tamaño", value: "Chico" }],
             price: 200000,
             costPrice: 90000,
             stock: 5,
@@ -61,8 +62,7 @@ describe("ProductCard", () => {
           },
           {
             sku: "VELA-2",
-            attributeName: "Tamaño",
-            attributeValue: "Grande",
+            attributes: [{ name: "Tamaño", value: "Grande" }],
             price: 350000,
             costPrice: 150000,
             stock: 5,
@@ -80,8 +80,7 @@ describe("ProductCard", () => {
         variants: [
           {
             sku: "VELA-1",
-            attributeName: "Color",
-            attributeValue: "Verde",
+            attributes: [{ name: "Color", value: "Verde" }],
             price: 250000,
             costPrice: 100000,
             stock: 0,
@@ -91,5 +90,33 @@ describe("ProductCard", () => {
       }),
     );
     expect(screen.getByText("Sin stock")).toBeInTheDocument();
+  });
+
+  it("marca los kits y las piezas únicas", () => {
+    const { unmount } = renderCard(buildProduct({ isBundle: true }));
+    expect(screen.getByText("Kit")).toBeInTheDocument();
+    unmount();
+
+    renderCard(
+      buildProduct({
+        variants: [
+          { sku: "PIEDRA-1", attributes: [], price: 90000, costPrice: 20000, stock: 1, lowStockThreshold: 0, isUniquePiece: true },
+        ],
+      }),
+    );
+    expect(screen.getByText("Pieza única")).toBeInTheDocument();
+  });
+
+  it("no pone etiqueta de kit si no hay stock: manda 'Sin stock'", () => {
+    renderCard(
+      buildProduct({
+        isBundle: true,
+        variants: [
+          { sku: "KIT-1", attributes: [], price: 400000, costPrice: 0, stock: 0, lowStockThreshold: 0 },
+        ],
+      }),
+    );
+    expect(screen.getByText("Sin stock")).toBeInTheDocument();
+    expect(screen.queryByText("Kit")).not.toBeInTheDocument();
   });
 });

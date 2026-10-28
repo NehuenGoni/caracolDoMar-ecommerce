@@ -19,8 +19,7 @@ async function createProduct(stock = 5) {
     variants: [
       {
         sku: `SKU-${unique}`,
-        attributeName: "Color",
-        attributeValue: "Verde",
+        attributes: [{ name: "Color", value: "Verde" }],
         price: 250000,
         costPrice: 100000,
         stock,

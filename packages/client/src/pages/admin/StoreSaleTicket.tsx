@@ -67,7 +67,7 @@ export default function StoreSaleTicket() {
           {sale.items.map((item) => (
             <li key={item.variantSku}>
               <p>
-                {item.productName} ({item.attributeValue})
+                {item.productName}{item.variantLabel && ` (${item.variantLabel})`}
               </p>
               <p className="flex justify-between">
                 <span>

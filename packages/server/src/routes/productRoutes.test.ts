@@ -27,8 +27,7 @@ async function adminToken() {
 function variant(sku: string) {
   return {
     sku,
-    attributeName: "Color",
-    attributeValue: "Azul",
+    attributes: [{ name: "Color", value: "Azul" }],
     price: 199900,
     costPrice: 90000,
     stock: 3,
@@ -151,6 +150,56 @@ describe("/api/admin/products", () => {
 
     // Baja lógica: sigue en la base, pero inactivo.
     expect((await Product.findById(productId))?.isActive).toBe(false);
+  });
+
+  it("acepta variantes con varios atributos y variantes sin atributos", async () => {
+    const token = await adminToken();
+    const category = await Category.create({ name: "Ropa" });
+    const res = await request(app)
+      .post("/api/admin/products")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        name: "Pantalón hindú",
+        category: category._id.toString(),
+        variants: [
+          {
+            ...variant("PANT-R-M"),
+            attributes: [
+              { name: "Color", value: "Rojo" },
+              { name: "Talle", value: "M" },
+            ],
+          },
+          { ...variant("PANT-LISO"), attributes: undefined },
+        ],
+      });
+    expect(res.status).toBe(201);
+    expect(res.body.product.variants[0].attributes).toEqual([
+      { name: "Color", value: "Rojo" },
+      { name: "Talle", value: "M" },
+    ]);
+    expect(res.body.product.variants[1].attributes).toEqual([]);
+  });
+
+  it("rechaza atributos con el mismo nombre dentro de una variante", async () => {
+    const token = await adminToken();
+    const category = await Category.create({ name: "Ropa" });
+    const res = await request(app)
+      .post("/api/admin/products")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        name: "Remera",
+        category: category._id.toString(),
+        variants: [
+          {
+            ...variant("REM-1"),
+            attributes: [
+              { name: "Color", value: "Rojo" },
+              { name: "color", value: "Azul" },
+            ],
+          },
+        ],
+      });
+    expect(res.status).toBe(400);
   });
 
   it("rechaza crear un producto sin variantes", async () => {

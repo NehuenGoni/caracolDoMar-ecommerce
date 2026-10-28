@@ -1,5 +1,5 @@
 import type { PaymentStatus } from "@caracol/shared";
-import { centsToPesos } from "@caracol/shared";
+import { centsToPesos, withVariantLabel } from "@caracol/shared";
 import { MercadoPagoConfig, MerchantOrder, Payment, PaymentRefund, Preference } from "mercadopago";
 import { env, isMercadoPagoConfigured } from "../config/env.js";
 import type { OrderDocument } from "../models/Order.js";
@@ -36,7 +36,7 @@ export async function createPaymentPreference(
 
   const items = order.items.map((item) => ({
     id: item.variantSku,
-    title: `${item.productName} - ${item.attributeValue}`,
+    title: withVariantLabel(item.productName, item.variantLabel),
     quantity: item.quantity,
     unit_price: centsToPesos(item.unitPrice),
     currency_id: "ARS",

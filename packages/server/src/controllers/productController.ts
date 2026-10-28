@@ -19,6 +19,10 @@ export const listProducts = asyncHandler(async (req: Request, res: Response) => 
   res.json(result);
 });
 
+export const getFacets = asyncHandler(async (_req: Request, res: Response) => {
+  res.json(await productService.getCatalogFacets());
+});
+
 export const getProductBySlug = asyncHandler(async (req: Request, res: Response) => {
   const product = await productService.getPublicProductBySlug(
     req.params.slug as string,
@@ -36,20 +40,20 @@ export const adminListProducts = asyncHandler(async (req: Request, res: Response
 export const adminGetProduct = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params as unknown as MongoIdParam;
   const product = await productService.getAdminProductById(id);
-  res.json({ product });
+  res.json({ product: await productService.toAdminView(product) });
 });
 
 export const createProduct = asyncHandler(async (req: Request, res: Response) => {
   const input = req.body as CreateProductInput;
   const product = await productService.createProduct(input, req.user!.id);
-  res.status(201).json({ product });
+  res.status(201).json({ product: await productService.toAdminView(product) });
 });
 
 export const updateProduct = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params as unknown as MongoIdParam;
   const input = req.body as UpdateProductInput;
   const product = await productService.updateProduct(id, input, req.user!.id);
-  res.json({ product });
+  res.json({ product: await productService.toAdminView(product) });
 });
 
 export const deleteProduct = asyncHandler(async (req: Request, res: Response) => {
