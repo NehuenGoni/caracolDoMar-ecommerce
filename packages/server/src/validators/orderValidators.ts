@@ -20,6 +20,12 @@ export const adminListOrdersQuerySchema = listOrdersQuerySchema.extend({
   status: z.enum(ORDER_STATUSES).optional(),
   customer: objectIdSchema.optional(),
   needsReview: z.coerce.boolean().optional(),
+  paymentMethod: z.enum(["mercado_pago", "transfer"]).optional(),
+  /** Transferencias con comprobante subido que todavía nadie confirmó ni rechazó. */
+  awaitingTransferReview: z
+    .enum(["true", "false"])
+    .optional()
+    .transform((value) => value === "true"),
 });
 export type AdminListOrdersQuery = z.infer<typeof adminListOrdersQuerySchema>;
 
@@ -29,6 +35,12 @@ export const updateOrderStatusSchema = z.object({
   trackingNumber: z.string().optional(),
 });
 export type UpdateOrderStatusInput = z.infer<typeof updateOrderStatusSchema>;
+
+export const confirmTransferPaymentSchema = z.object({
+  paymentStatus: z.enum(["approved", "rejected"]),
+  note: z.string().trim().max(300).optional(),
+});
+export type ConfirmTransferPaymentInput = z.infer<typeof confirmTransferPaymentSchema>;
 
 export const attachReceiptSchema = z.object({
   receiptUrl: z.string().url("El comprobante debe ser una URL válida"),

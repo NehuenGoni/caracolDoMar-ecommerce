@@ -6,6 +6,8 @@ import { createCheckoutSchema } from "../validators/checkoutValidators.js";
 
 export const checkoutRouter = Router();
 
+checkoutRouter.get("/payment-options", checkoutController.getPaymentOptions);
+
 checkoutRouter.post(
   "/",
   authenticate,

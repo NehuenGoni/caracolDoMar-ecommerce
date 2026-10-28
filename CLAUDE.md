@@ -22,6 +22,26 @@ Ecommerce/Gran Grow. Idioma de la UI y de los comentarios: español rioplatense.
   convierte en producto común ni al revés, y no cambia de composición una vez vendido.
 - **Piezas únicas (`isUniquePiece`):** stock máximo 1; salen del listado público al venderse (la ficha
   sigue accesible) y no generan alertas de stock bajo.
+- **Transacciones:** lo que escribe varios documentos a la vez (compras, importación de facturas) va
+  dentro de `withTransaction` (`utils/transaction.ts`) y pasa la `session` a cada consulta. Con un Mongo
+  sin replica set corre igual, sin sesión. Sus tests usan `connectTestReplSetDB`. Nada con efectos fuera
+  de la base (emails, APIs) puede ir adentro: la transacción se puede reintentar.
+- **Costo y precio:** los escribe la compra (`supplierPurchaseService`); el precio sugerido sale de
+  `suggestedPrice` (shared) con la configuración de Ajustes.
+- **Pago por transferencia:** el pedido nace `pending`, reserva stock y vence a las 48 h sin comprobante
+  (24 h más si el admin rechaza uno). Los datos de la cuenta solo los ve el dueño del pedido.
+- **Importación de facturas con IA:** la IA nunca toca el catálogo; deja un borrador que revisa un admin.
+  `anthropicService.ts` es el único archivo que importa el SDK (los tests lo mockean).
+- **Transacciones:** lo que escribe varios documentos a la vez (compras, importación de facturas) va
+  dentro de `withTransaction` (`utils/transaction.ts`) y pasa la `session` a cada consulta. Con un Mongo
+  sin replica set corre igual, sin sesión. Sus tests usan `connectTestReplSetDB`. Nada con efectos fuera
+  de la base (emails, APIs) puede ir adentro: la transacción se puede reintentar.
+- **Costo y precio:** los escribe la compra (`supplierPurchaseService`); el precio sugerido sale de
+  `suggestedPrice` (shared) con la configuración de Ajustes.
+- **Pago por transferencia:** el pedido nace `pending`, reserva stock y vence a las 48 h sin comprobante
+  (24 h más si el admin rechaza uno). Los datos de la cuenta solo los ve el dueño del pedido.
+- **Importación de facturas con IA:** la IA nunca toca el catálogo; deja un borrador que revisa un admin.
+  `anthropicService.ts` es el único archivo que importa el SDK (los tests lo mockean).
 - **Numeración** (pedidos, ventas, solicitudes): `Counter` / `getNextSequence()`.
 - **Integraciones opcionales:** cada una tiene un flag `isXConfigured` en `config/env.ts` y un
   fallback/mock. No hacer que el server dependa de una clave externa para arrancar.
@@ -37,11 +57,12 @@ Ecommerce/Gran Grow. Idioma de la UI y de los comentarios: español rioplatense.
 
 - Fase 0: scaffold desde Amanda — hecha. Datos del negocio en `shared/src/constants/business.ts`
   siguen en `COMPLETAR`; `packages/client/public/` todavía tiene logo y fotos de Amanda.
-- Fase 1: hecha, salvo las transacciones de Mongo (ver abajo). El costo (`costPrice`) solo sale por
+- Fase 1: hecha. El costo (`costPrice`) solo sale por
   `serializeProducts` (`productService`) para no-admins; `updateProduct` no toca el stock de variantes
   existentes; `deleteProduct` es baja lógica; los comprobantes solo se aceptan del Cloudinary propio.
-- Pendiente de Fase 1: transacciones multi-documento (checkout, compras, POS). Los tests usan Mongo en
-  memoria sin replica set; se hace junto con la Fase 3 (compras idempotentes).
 - Fase 2: hecha (variantes con varios atributos, filtros/orden/subcategorías, `GET /products/facets`,
   videos, piezas únicas, kits). Los videos van en `videos[]`, aparte de `images[]`.
-- Fases 3–7: portar proveedores/IA/pricing, roles admin+vendedor, reportes, SEO, identidad visual.
+- Fase 3: hecha (proveedores, compras idempotentes y transaccionales, precios automáticos opcionales,
+  transferencia bancaria, importación de facturas con IA). Las transacciones cubren compras e importación;
+  el checkout y el POS siguen con compensación manual (funciona y está testeada).
+- Fases 4–7: roles admin+vendedor, reportes, SEO, identidad visual.

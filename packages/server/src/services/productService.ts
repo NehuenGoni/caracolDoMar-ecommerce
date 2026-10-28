@@ -1,6 +1,7 @@
 import type { BundleComponent, PaginatedResult } from "@caracol/shared";
 import type { FilterQuery, Types } from "mongoose";
 import { Category } from "../models/Category.js";
+import { Supplier } from "../models/Supplier.js";
 import {
   Product,
   type IProduct,
@@ -34,7 +35,9 @@ export type ProductView = IProduct & {
   bundleComponents?: BundleComponent[];
 };
 export type PublicVariant = Omit<IProductVariant, "costPrice">;
-export type PublicProductView = Omit<ProductView, "variants"> & { variants: PublicVariant[] };
+export type PublicProductView = Omit<ProductView, "variants" | "supplier"> & {
+  variants: PublicVariant[];
+};
 
 /**
  * Cómo sale un producto de la API. Dos reglas que no se pueden olvidar:
@@ -65,8 +68,9 @@ export async function serializeProducts(
       json.bundleComponents = describeComponents(product, components);
     }
     if (viewerIsAdmin) return json;
+    const { supplier: _supplier, ...publicJson } = json;
     return {
-      ...json,
+      ...publicJson,
       variants: json.variants.map(({ costPrice: _costPrice, ...variant }) => variant),
     };
   });
@@ -218,6 +222,11 @@ async function assertCategoryExists(categoryId: string): Promise<void> {
   if (!exists) throw new NotFoundError("Categoría no encontrada");
 }
 
+async function assertSupplierExists(supplierId: string | null | undefined): Promise<void> {
+  if (!supplierId) return;
+  if (!(await Supplier.exists({ _id: supplierId }))) throw new NotFoundError("Proveedor no encontrado");
+}
+
 function normalizeSku(sku: string): string {
   return sku.trim().toUpperCase();
 }
@@ -253,6 +262,7 @@ export async function createProduct(
 ): Promise<ProductDocument> {
   assertUniqueSkus(input.variants);
   await assertCategoryExists(input.category);
+  await assertSupplierExists(input.supplier);
 
   const isBundle = input.isBundle ?? false;
   const bundle = await validateBundle({
@@ -338,6 +348,7 @@ export async function updateProduct(
   if (input.category) {
     await assertCategoryExists(input.category);
   }
+  await assertSupplierExists(input.supplier);
   if (input.isBundle !== undefined && input.isBundle !== product.isBundle) {
     // Cambiaría de qué se descuenta el stock de las ventas ya hechas.
     throw new BadRequestError("Un producto no se puede convertir en kit (ni al revés): creá uno nuevo");

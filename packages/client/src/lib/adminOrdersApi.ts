@@ -7,6 +7,9 @@ export interface AdminListOrdersParams {
   status?: OrderStatus;
   customer?: string;
   needsReview?: boolean;
+  paymentMethod?: "mercado_pago" | "transfer";
+  /** Transferencias con comprobante esperando que alguien las confirme o rechace. */
+  awaitingTransferReview?: boolean;
 }
 
 export interface UpdateOrderStatusInput {
@@ -35,6 +38,11 @@ export const updateOrderStatus = (id: string, input: UpdateOrderStatusInput) =>
 export const reactivateOrder = (id: string) => apiPost<{ order: Order }>(`/admin/orders/${id}/reactivate`);
 
 export const refundOrder = (id: string) => apiPost<{ order: Order }>(`/admin/orders/${id}/refund`);
+
+export const reviewTransferPayment = (
+  id: string,
+  input: { paymentStatus: "approved" | "rejected"; note?: string },
+) => apiPost<{ order: Order }>(`/admin/orders/${id}/transfer-review`, input);
 
 export const importOrderToCarrier = (id: string) =>
   apiPost<{ order: Order }>(`/admin/orders/${id}/carrier-import`);

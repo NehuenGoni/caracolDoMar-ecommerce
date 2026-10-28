@@ -1,15 +1,25 @@
-import { MongoMemoryServer } from "mongodb-memory-server";
+import { MongoMemoryReplSet, MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 
-let mongoServer: MongoMemoryServer | undefined;
+let mongoServer: MongoMemoryServer | MongoMemoryReplSet | undefined;
+
+async function connect(uri: string): Promise<void> {
+  await mongoose.connect(uri);
+  // Los índices (incluidos los `unique`) se construyen en background; sin
+  // esto, dos inserts seguidos en el mismo test pueden no chocar todavía.
+  await mongoose.connection.syncIndexes();
+}
 
 /** Levanta un Mongo en memoria y conecta Mongoose. Sin soporte de transacciones multi-doc. */
 export async function connectTestDB(): Promise<void> {
   mongoServer = await MongoMemoryServer.create();
-  await mongoose.connect(mongoServer.getUri());
-  // Los índices (incluidos los `unique`) se construyen en background; sin
-  // esto, dos inserts seguidos en el mismo test pueden no chocar todavía.
-  await mongoose.connection.syncIndexes();
+  await connect(mongoServer.getUri());
+}
+
+/** Igual, pero como replica set de un nodo: para los tests de código que usa transacciones. */
+export async function connectTestReplSetDB(): Promise<void> {
+  mongoServer = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
+  await connect(mongoServer.getUri());
 }
 
 export async function closeTestDB(): Promise<void> {

@@ -1,19 +1,30 @@
-import type { OrderStatus, PaginatedResult } from "@caracol/shared";
+import type { OrderStatus, PaginatedResult, TransferInstructions } from "@caracol/shared";
 import { centsToPesos } from "@caracol/shared";
 import { Types, type FilterQuery } from "mongoose";
 import { decrementStock } from "./checkoutService.js";
 import { Order, type IOrder, type OrderDocument } from "../models/Order.js";
 import { User } from "../models/User.js";
 import { BadRequestError, ForbiddenError, NotFoundError } from "../utils/AppError.js";
-import { sendOrderConfirmationEmail, sendOrderStatusChangeEmail } from "./email/emailService.js";
+import {
+  sendOrderConfirmationEmail,
+  sendOrderStatusChangeEmail,
+  sendTransferRejectedEmail,
+} from "./email/emailService.js";
 import { recordMovements, returnStock } from "./inventoryService.js";
-import { createPaymentPreference, getPaymentDeadline, refundPayment } from "./paymentService.js";
+import {
+  createPaymentPreference,
+  getPaymentDeadline,
+  refundPayment,
+  TRANSFER_RETRY_WINDOW_MS,
+} from "./paymentService.js";
+import { getTransferSettings } from "./settingsService.js";
 import { shippingCarrier } from "./shipping/index.js";
 import { isOwnCloudinaryUrl } from "./uploadService.js";
 import { getPackageForItems } from "./shippingService.js";
 import type {
   AdminListOrdersQuery,
   AttachReceiptInput,
+  ConfirmTransferPaymentInput,
   ListOrdersQuery,
   UpdateOrderStatusInput,
 } from "../validators/orderValidators.js";
@@ -73,8 +84,122 @@ export async function attachReceipt(
     throw new BadRequestError("El comprobante debe subirse desde la tienda");
   }
   const order = await getMyOrderById(userId, orderId);
+  if (order.paymentMethod !== "transfer") {
+    throw new BadRequestError("Solo los pedidos pagados por transferencia llevan comprobante");
+  }
+  if (order.status === "cancelled") {
+    throw new BadRequestError("El pedido está cancelado: escribinos si ya hiciste la transferencia");
+  }
+  if (order.paymentStatus === "approved") {
+    throw new BadRequestError("El pago de este pedido ya fue confirmado");
+  }
+
   order.receiptUrl = input.receiptUrl;
+  // Si el admin había rechazado un comprobante anterior, este vuelve a quedar para revisar.
+  order.paymentStatus = "pending";
+  order.paymentDetails = { ...order.paymentDetails, receiptUploadedAt: new Date() };
   await order.save();
+  return order;
+}
+
+/** Los datos para transferir de un pedido propio: a dónde, cuánto y hasta cuándo. */
+export async function getTransferInstructions(userId: string, orderId: string): Promise<TransferInstructions> {
+  const order = await getMyOrderById(userId, orderId);
+  if (order.paymentMethod !== "transfer") {
+    throw new BadRequestError("Este pedido no se paga por transferencia");
+  }
+  const details = order.paymentDetails as { expiresAt?: Date } | undefined;
+  return {
+    transfer: await getTransferSettings(),
+    orderNumber: order.orderNumber,
+    amount: order.total,
+    expiresAt: details?.expiresAt ? new Date(details.expiresAt).toISOString() : undefined,
+    receiptUrl: order.receiptUrl,
+    paymentStatus: order.paymentStatus,
+  };
+}
+
+/**
+ * El admin mira el comprobante y confirma o rechaza la transferencia.
+ * - Aprobar confirma el pedido. Si ya se había cancelado (venció antes de que llegara el pago), se
+ *   intenta reservar el stock de nuevo: si no alcanza, se informa y el pedido queda como estaba.
+ * - Rechazar le da un plazo más al cliente para subir un comprobante válido.
+ */
+export async function reviewTransferPayment(
+  orderId: string,
+  input: ConfirmTransferPaymentInput,
+  adminId: string,
+): Promise<OrderDocument> {
+  const order = await getAdminOrderById(orderId);
+  if (order.paymentMethod !== "transfer") {
+    throw new BadRequestError("Solo las transferencias se confirman a mano: Mercado Pago avisa solo");
+  }
+  if (order.paymentStatus === "approved") {
+    throw new BadRequestError("El pago de este pedido ya está confirmado");
+  }
+
+  const customer = await User.findById(order.customer);
+  const history = {
+    changedAt: new Date(),
+    changedBy: new Types.ObjectId(adminId),
+  };
+
+  if (input.paymentStatus === "approved") {
+    if (order.status === "cancelled") {
+      const stockChanges = await decrementStock(
+        order.items.map((item) => ({
+          product: item.product,
+          variantSku: item.variantSku,
+          quantity: item.quantity,
+        })),
+      );
+      await recordMovements(stockChanges, {
+        type: "sale_out",
+        reference: order._id.toString(),
+        note: "Pedido reactivado al confirmar su transferencia",
+        createdBy: adminId,
+      });
+    }
+    order.paymentStatus = "approved";
+    if (order.status === "pending" || order.status === "cancelled") {
+      order.status = "confirmed";
+      order.statusHistory.push({
+        ...history,
+        status: "confirmed",
+        note: input.note ?? "Transferencia confirmada",
+      });
+    }
+    order.paymentDetails = { ...order.paymentDetails, confirmedAt: new Date(), confirmedBy: adminId };
+    await order.save();
+    if (customer) {
+      sendOrderConfirmationEmail(customer, { orderNumber: order.orderNumber, total: order.total });
+    }
+    return order;
+  }
+
+  if (order.status === "cancelled") {
+    throw new BadRequestError("El pedido ya está cancelado");
+  }
+  const retryUntil = new Date(Date.now() + TRANSFER_RETRY_WINDOW_MS);
+  order.paymentStatus = "rejected";
+  order.statusHistory.push({
+    ...history,
+    status: order.status,
+    note: input.note ? `Comprobante rechazado: ${input.note}` : "Comprobante rechazado",
+  });
+  // Se archiva el comprobante rechazado y se libera el campo: así el pedido vuelve a vencer si el
+  // cliente no sube otro dentro del nuevo plazo.
+  const rejectedReceipts = (order.paymentDetails as { rejectedReceipts?: string[] } | undefined)?.rejectedReceipts ?? [];
+  order.paymentDetails = {
+    ...order.paymentDetails,
+    expiresAt: retryUntil,
+    rejectedReceipts: order.receiptUrl ? [...rejectedReceipts, order.receiptUrl] : rejectedReceipts,
+  };
+  order.receiptUrl = undefined;
+  await order.save();
+  if (customer) {
+    sendTransferRejectedEmail(customer, { orderNumber: order.orderNumber, note: input.note, expiresAt: retryUntil });
+  }
   return order;
 }
 
@@ -84,6 +209,13 @@ export async function listAdminOrders(
   const filter: FilterQuery<IOrder> = {};
   if (query.status) filter.status = query.status;
   if (query.customer) filter.customer = query.customer;
+  if (query.paymentMethod) filter.paymentMethod = query.paymentMethod;
+  if (query.awaitingTransferReview) {
+    filter.paymentMethod = "transfer";
+    filter.paymentStatus = "pending";
+    filter.status = { $ne: "cancelled" };
+    filter.receiptUrl = { $exists: true, $ne: null };
+  }
   if (query.needsReview) {
     filter["paymentIssue.flaggedAt"] = { $exists: true };
     filter["paymentIssue.resolvedAt"] = { $exists: false };
@@ -238,16 +370,28 @@ export async function expireStalePendingOrders(now: Date = new Date()): Promise<
     "paymentDetails.paymentId": { $exists: true },
   };
 
-  const candidates = await Order.find({
-    status: "pending",
-    createdAt: { $lt: new Date(now.getTime() - PENDING_ORDER_GRACE_MS) },
-    $nor: [
-      {
-        ...isCashPaymentInProcess,
-        createdAt: { $gte: new Date(now.getTime() - CASH_PAYMENT_GRACE_MS) },
-      },
-    ],
-  });
+  const [mercadoPagoCandidates, transferCandidates] = await Promise.all([
+    Order.find({
+      status: "pending",
+      paymentMethod: { $ne: "transfer" },
+      createdAt: { $lt: new Date(now.getTime() - PENDING_ORDER_GRACE_MS) },
+      $nor: [
+        {
+          ...isCashPaymentInProcess,
+          createdAt: { $gte: new Date(now.getTime() - CASH_PAYMENT_GRACE_MS) },
+        },
+      ],
+    }),
+    // Transferencias: vencen si pasó su plazo y no hay un comprobante esperando revisión (esos los
+    // resuelve un admin: confirmar o cancelar, pero no se cancelan solos).
+    Order.find({
+      status: "pending",
+      paymentMethod: "transfer",
+      receiptUrl: null,
+      "paymentDetails.expiresAt": { $lt: now },
+    }),
+  ]);
+  const candidates = [...mercadoPagoCandidates, ...transferCandidates];
 
   let expiredCount = 0;
   for (const candidate of candidates) {

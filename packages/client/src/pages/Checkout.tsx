@@ -1,8 +1,8 @@
-import type { PublicShippingSettings, ShippingOption } from "@caracol/shared";
+import type { PaymentMethod, PublicShippingSettings, ShippingOption } from "@caracol/shared";
 import { formatMoney } from "@caracol/shared";
 import { Loader2, Plus } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { AddressForm } from "@/components/account/AddressForm";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -11,7 +11,7 @@ import { PriceTag } from "@/components/ui/PriceTag";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { ApiError } from "@/lib/apiClient";
-import { createCheckout } from "@/lib/checkoutApi";
+import { createCheckout, getPaymentOptions, type PaymentOptions } from "@/lib/checkoutApi";
 import { getShippingSettings, quoteShipping } from "@/lib/shippingApi";
 import { addAddress, type AddressInput } from "@/lib/usersApi";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,10 @@ import { cn } from "@/lib/utils";
 export default function Checkout() {
   const { user, setUser } = useAuth();
   const { cart } = useCart();
+  const navigate = useNavigate();
+  // Hasta saber qué métodos hay se asume solo Mercado Pago (el de siempre).
+  const [paymentOptions, setPaymentOptions] = useState<PaymentOptions>({ mercadoPago: true, transfer: false });
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("mercado_pago");
   const [addressId, setAddressId] = useState(user?.addresses.find((a) => a.isDefault)?._id ?? "");
   const [showAddressForm, setShowAddressForm] = useState(user?.addresses.length === 0);
   const [shippingMethod, setShippingMethod] = useState<"pickup" | "home">("home");
@@ -28,6 +32,18 @@ export default function Checkout() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [settings, setSettings] = useState<PublicShippingSettings | null>(null);
+
+  useEffect(() => {
+    getPaymentOptions()
+      .then((options) => {
+        setPaymentOptions(options);
+        // Si Mercado Pago no está disponible y la transferencia sí, arranca por esa.
+        if (!options.mercadoPago && options.transfer) setPaymentMethod("transfer");
+      })
+      .catch(() => {
+        // Sin saber qué hay disponible, queda el método por defecto.
+      });
+  }, []);
 
   useEffect(() => {
     getShippingSettings()
@@ -90,13 +106,19 @@ export default function Checkout() {
     setIsSubmitting(true);
     setError(null);
     try {
-      const { checkoutUrl } = await createCheckout({
+      const { order, checkoutUrl } = await createCheckout({
         addressId: shippingMethod === "home" ? addressId : undefined,
         shippingMethod,
+        paymentMethod,
         expectedShippingCost: selectedOption.cost,
         notes: undefined,
       });
-      window.location.href = checkoutUrl;
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
+      } else {
+        // Transferencia: el pedido ya está creado; se le muestra a dónde transferir.
+        navigate(`/order-confirmation/${order._id}`);
+      }
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {
         setError("El costo de envío cambió, revisá el nuevo precio y confirmá de nuevo");
@@ -177,6 +199,39 @@ export default function Checkout() {
             {quoteError && <InlineMessage tone="error">{quoteError}</InlineMessage>}
           </div>
         </section>
+
+        {paymentOptions.mercadoPago && paymentOptions.transfer && (
+          <section className="flex flex-col gap-4">
+            <h2 className="font-display text-xl text-text">Forma de pago</h2>
+            <div className="flex flex-col gap-2">
+              {(
+                [
+                  { value: "mercado_pago", label: "Mercado Pago", hint: "Tarjeta, dinero en cuenta o efectivo" },
+                  { value: "transfer", label: "Transferencia bancaria", hint: "Te pasamos los datos y subís el comprobante" },
+                ] as const
+              ).map((option) => (
+                <label
+                  key={option.value}
+                  className={cn(
+                    "flex cursor-pointer items-center gap-3 rounded-2xl border p-4 text-sm transition-colors",
+                    paymentMethod === option.value ? "border-accent bg-accent/5" : "border-border bg-surface",
+                  )}
+                >
+                  <input
+                    type="radio"
+                    name="payment"
+                    checked={paymentMethod === option.value}
+                    onChange={() => setPaymentMethod(option.value)}
+                  />
+                  <span>
+                    {option.label}
+                    <span className="block text-xs text-text-muted">{option.hint}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </section>
+        )}
 
         {shippingMethod === "pickup" ? (
           <section className="flex flex-col gap-2">
@@ -276,10 +331,12 @@ export default function Checkout() {
           disabled={isQuoting || !selectedOption}
           onClick={handleConfirm}
         >
-          Pagar con Mercado Pago
+          {paymentMethod === "transfer" ? "Confirmar pedido" : "Pagar con Mercado Pago"}
         </Button>
         <p className="mt-2 text-center text-xs text-text-muted">
-          Vas a ser redirigido a Mercado Pago para completar el pago de forma segura.
+          {paymentMethod === "transfer"
+            ? "Reservamos tus productos y te mostramos a dónde transferir. Tenés 48 horas para subir el comprobante."
+            : "Vas a ser redirigido a Mercado Pago para completar el pago de forma segura."}
         </p>
       </Card>
     </div>

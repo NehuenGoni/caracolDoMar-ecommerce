@@ -7,6 +7,8 @@ export type ShippingMethod = (typeof SHIPPING_METHODS)[number];
 export const createCheckoutSchema = z
   .object({
     addressId: objectIdSchema.optional(),
+    /** Mercado Pago (tarjeta, dinero en cuenta, efectivo) o transferencia bancaria. */
+    paymentMethod: z.enum(["mercado_pago", "transfer"]).default("mercado_pago"),
     shippingMethod: z.enum(SHIPPING_METHODS),
     /** Centavos: el costo que el cliente vio al confirmar, para detectar si cambió entre la cotización y el pago. */
     expectedShippingCost: z.number().int().nonnegative(),

@@ -10,7 +10,9 @@ import { User } from "../models/User.js";
 import { BadRequestError, ConflictError, NotFoundError, ServiceUnavailableError } from "../utils/AppError.js";
 import type { CreateCheckoutInput } from "../validators/checkoutValidators.js";
 import { recordMovements, type StockChange } from "./inventoryService.js";
-import { createPaymentPreference, getPaymentDeadline } from "./paymentService.js";
+import { createPaymentPreference, getPaymentDeadline, TRANSFER_WINDOW_MS } from "./paymentService.js";
+import { sendTransferInstructionsEmail } from "./email/emailService.js";
+import { getTransferSettings } from "./settingsService.js";
 import { getPackageForItems, quoteShipping, type ShippingItemInput } from "./shippingService.js";
 
 export interface StockDecrement {
@@ -80,9 +82,14 @@ export async function restockItems(requested: StockDecrement[]): Promise<void> {
 export async function createOrderFromCart(
   userId: string,
   input: CreateCheckoutInput,
-): Promise<{ order: OrderDocument; checkoutUrl: string }> {
-  if (!isMercadoPagoConfigured) {
+): Promise<{ order: OrderDocument; checkoutUrl: string | null }> {
+  const paymentMethod = input.paymentMethod ?? "mercado_pago";
+  if (paymentMethod === "mercado_pago" && !isMercadoPagoConfigured) {
     throw new ServiceUnavailableError("Mercado Pago no está configurado");
+  }
+  const transferSettings = await getTransferSettings();
+  if (paymentMethod === "transfer" && !transferSettings.enabled) {
+    throw new BadRequestError("El pago por transferencia no está disponible");
   }
 
   const user = await User.findById(userId);
@@ -181,8 +188,11 @@ export async function createOrderFromCart(
       total,
       status: "pending",
       statusHistory: [{ status: "pending", changedAt: new Date() }],
-      paymentMethod: "mercado_pago",
+      paymentMethod,
       paymentStatus: "pending",
+      // Una transferencia no tiene preferencia de pago: el plazo para subir el comprobante va acá.
+      paymentDetails:
+        paymentMethod === "transfer" ? { expiresAt: new Date(Date.now() + TRANSFER_WINDOW_MS) } : undefined,
       shippingMethod: input.shippingMethod,
       shippingAddress: address
         ? {
@@ -216,6 +226,24 @@ export async function createOrderFromCart(
   } catch (err) {
     await restockItems(stockDecrements);
     throw err;
+  }
+
+  if (paymentMethod === "transfer") {
+    // No hay nada que cobrar online: la venta queda concretada (carrito vacío y stock reservado)
+    // y el cliente recibe los datos de la cuenta; el pedido se confirma cuando el admin ve el pago.
+    await Cart.updateOne({ user: userId }, { $set: { items: [] } });
+    await recordMovements(stockChanges, {
+      type: "sale_out",
+      reference: order._id.toString(),
+      createdBy: userId,
+    });
+    sendTransferInstructionsEmail(user, {
+      orderNumber: order.orderNumber,
+      total: order.total,
+      expiresAt: new Date((order.paymentDetails as { expiresAt: Date }).expiresAt),
+      transfer: transferSettings,
+    });
+    return { order, checkoutUrl: null };
   }
 
   // Recién si Mercado Pago acepta crear la preferencia se considera la venta

@@ -5,6 +5,7 @@ import type { MongoIdParam } from "../validators/commonValidators.js";
 import type {
   AdminListOrdersQuery,
   AttachReceiptInput,
+  ConfirmTransferPaymentInput,
   ListOrdersQuery,
   UpdateOrderStatusInput,
 } from "../validators/orderValidators.js";
@@ -31,6 +32,17 @@ export const attachReceipt = asyncHandler(async (req: Request, res: Response) =>
   const { id } = req.params as unknown as MongoIdParam;
   const input = req.body as AttachReceiptInput;
   const order = await orderService.attachReceipt(req.user!.id, id, input);
+  res.json({ order });
+});
+
+export const getTransferInstructions = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params as unknown as MongoIdParam;
+  res.json(await orderService.getTransferInstructions(req.user!.id, id));
+});
+
+export const reviewTransferPayment = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params as unknown as MongoIdParam;
+  const order = await orderService.reviewTransferPayment(id, req.body as ConfirmTransferPaymentInput, req.user!.id);
   res.json({ order });
 });
 

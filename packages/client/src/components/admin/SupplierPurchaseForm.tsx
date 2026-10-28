@@ -1,13 +1,15 @@
 import { formatMoney } from "@caracol/shared";
 import { Plus, Trash2 } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { ProductVariantPicker, type VariantSelection } from "@/components/admin/ProductVariantPicker";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { InlineMessage } from "@/components/ui/InlineMessage";
 import { MoneyInput } from "@/components/ui/MoneyInput";
 import { Textarea } from "@/components/ui/Textarea";
+import { useSuppliers } from "@/hooks/admin/useSuppliers";
 import { ApiError } from "@/lib/apiClient";
 import { createSupplierPurchase, type SupplierPurchaseItemInput } from "@/lib/supplierPurchasesApi";
 
@@ -17,12 +19,19 @@ interface ItemRow {
   unitCost: number;
 }
 
+const OTHER = "__other__";
+
 function emptyRow(): ItemRow {
   return { selection: null, quantity: 1, unitCost: 0 };
 }
 
 export function SupplierPurchaseForm({ onCreated }: { onCreated: () => void }) {
+  const { suppliers } = useSuppliers();
+  // "" = todavía no eligió; OTHER = escribe el nombre a mano; si no, es el id de un proveedor registrado.
+  const [supplierChoice, setSupplierChoice] = useState("");
   const [supplierName, setSupplierName] = useState("");
+  // Misma clave hasta que la compra se registra: si el envío se repite no se duplica.
+  const idempotencyKey = useRef(crypto.randomUUID());
   const [notes, setNotes] = useState("");
   const [rows, setRows] = useState<ItemRow[]>([emptyRow()]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,6 +49,10 @@ export function SupplierPurchaseForm({ onCreated }: { onCreated: () => void }) {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (!supplierChoice || (supplierChoice === OTHER && !supplierName.trim())) {
+      setError("Elegí el proveedor");
+      return;
+    }
     const items: SupplierPurchaseItemInput[] = [];
     for (const row of rows) {
       if (!row.selection) {
@@ -61,7 +74,14 @@ export function SupplierPurchaseForm({ onCreated }: { onCreated: () => void }) {
     setIsSubmitting(true);
     setError(null);
     try {
-      await createSupplierPurchase({ supplierName, items, notes: notes || undefined });
+      await createSupplierPurchase({
+        ...(supplierChoice === OTHER ? { supplierName: supplierName.trim() } : { supplierId: supplierChoice }),
+        items,
+        notes: notes || undefined,
+        idempotencyKey: idempotencyKey.current,
+      });
+      idempotencyKey.current = crypto.randomUUID();
+      setSupplierChoice("");
       setSupplierName("");
       setNotes("");
       setRows([emptyRow()]);
@@ -75,7 +95,30 @@ export function SupplierPurchaseForm({ onCreated }: { onCreated: () => void }) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-      <Input label="Proveedor" required value={supplierName} onChange={(e) => setSupplierName(e.target.value)} />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Select
+          label="Proveedor"
+          required
+          value={supplierChoice}
+          onChange={(e) => setSupplierChoice(e.target.value)}
+        >
+          <option value="">Seleccionar…</option>
+          {suppliers.map((supplier) => (
+            <option key={supplier._id} value={supplier._id}>
+              {supplier.name}
+            </option>
+          ))}
+          <option value={OTHER}>Otro (escribir el nombre)</option>
+        </Select>
+        {supplierChoice === OTHER && (
+          <Input
+            label="Nombre del proveedor"
+            required
+            value={supplierName}
+            onChange={(e) => setSupplierName(e.target.value)}
+          />
+        )}
+      </div>
 
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">

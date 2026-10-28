@@ -109,6 +109,7 @@ describe("/api/orders", () => {
 
   it("adjunta un comprobante al propio pedido", async () => {
     const { token, order } = await createCustomerWithOrder();
+    await Order.updateOne({ _id: order._id }, { paymentMethod: "transfer" });
     const res = await request(app)
       .patch(`/api/orders/${order._id.toString()}/receipt`)
       .set("Authorization", `Bearer ${token}`)

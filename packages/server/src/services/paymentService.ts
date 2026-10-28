@@ -138,3 +138,8 @@ export async function fetchMerchantOrderPaymentIds(merchantOrderId: string): Pro
   const result = await merchantOrder.get({ merchantOrderId });
   return (result.payments ?? []).filter((p) => p.id !== undefined).map((p) => String(p.id));
 }
+
+/** Cuánto tiene el cliente para subir el comprobante de una transferencia antes de que el pedido venza. */
+export const TRANSFER_WINDOW_MS = 48 * 60 * 60 * 1000;
+/** Si el admin rechaza el comprobante, plazo para subir uno válido. */
+export const TRANSFER_RETRY_WINDOW_MS = 24 * 60 * 60 * 1000;

@@ -112,6 +112,61 @@ export function orderConfirmationTemplate(
   };
 }
 
+export function transferInstructionsTemplate(
+  firstName: string,
+  data: {
+    orderNumber: number;
+    total: number;
+    expiresAt: Date;
+    transfer: { accountHolder: string; bankName: string; cbu: string; alias: string; taxId: string; instructions: string };
+  },
+): EmailTemplate {
+  const row = (label: string, value: string) =>
+    value
+      ? `<tr><td style="padding:3px 12px 3px 0;color:${BRAND.textMuted};">${label}</td><td style="padding:3px 0;"><strong>${escapeHtml(value)}</strong></td></tr>`
+      : "";
+  const deadline = data.expiresAt.toLocaleString("es-AR", {
+    timeZone: "America/Argentina/Buenos_Aires",
+    dateStyle: "long",
+    timeStyle: "short",
+  });
+  return {
+    subject: `Datos para transferir tu pedido #${data.orderNumber}`,
+    html: wrapper(
+      `Hola ${firstName}, recibimos tu pedido`,
+      `<p style="color:${BRAND.textMuted};">Para confirmar el pedido <strong>#${data.orderNumber}</strong> transferí <strong>${formatMoney(data.total)}</strong> a esta cuenta y subí el comprobante desde <em>Mis pedidos</em>:</p>
+      <table style="font-size:14px;margin:12px 0;">
+        ${row("Titular", data.transfer.accountHolder)}
+        ${row("Banco", data.transfer.bankName)}
+        ${row("CBU/CVU", data.transfer.cbu)}
+        ${row("Alias", data.transfer.alias)}
+        ${row("CUIT/CUIL", data.transfer.taxId)}
+      </table>
+      ${data.transfer.instructions ? `<p style="color:${BRAND.textMuted};">${escapeHtml(data.transfer.instructions)}</p>` : ""}
+      <p style="color:${BRAND.textMuted};font-size:12px;">Guardamos tus productos hasta el ${deadline}. Si para entonces no subiste el comprobante, el pedido se cancela.</p>`,
+    ),
+  };
+}
+
+export function transferRejectedTemplate(
+  firstName: string,
+  data: { orderNumber: number; note?: string; expiresAt: Date },
+): EmailTemplate {
+  const deadline = data.expiresAt.toLocaleString("es-AR", {
+    timeZone: "America/Argentina/Buenos_Aires",
+    dateStyle: "long",
+    timeStyle: "short",
+  });
+  return {
+    subject: `No pudimos confirmar el pago de tu pedido #${data.orderNumber}`,
+    html: wrapper(
+      `Hola ${firstName}`,
+      `<p style="color:${BRAND.textMuted};">No pudimos confirmar la transferencia de tu pedido <strong>#${data.orderNumber}</strong>${data.note ? `: ${escapeHtml(data.note)}` : "."}</p>
+      <p style="color:${BRAND.textMuted};">Podés subir un comprobante válido desde <em>Mis pedidos</em> hasta el ${deadline}.</p>`,
+    ),
+  };
+}
+
 export function orderStatusChangeTemplate(
   firstName: string,
   order: { orderNumber: number },

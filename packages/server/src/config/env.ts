@@ -37,6 +37,17 @@ const envSchema = z.object({
   // no-reply sin Reply-To penaliza la entrega (cae más a spam).
   EMAIL_REPLY_TO: z.string().email().default("contacto@caracol.local"),
 
+  // Lectura de facturas de proveedor con IA (Claude). Sin la clave la función queda apagada.
+  // Es una cuenta de la API de Anthropic, distinta de una suscripción de Claude.
+  ANTHROPIC_API_KEY: z.string().optional().default(""),
+  ANTHROPIC_MODEL: z.string().default("claude-sonnet-5-5"),
+  ANTHROPIC_EFFORT: z.enum(["low", "medium", "high", "xhigh", "max"]).default("medium"),
+
+  // Valores iniciales de la configuración de precios, hasta que el admin guarde la suya.
+  DEFAULT_MARGIN_PCT: z.coerce.number().min(0).max(1000).default(100),
+  /** Centavos: 10000 = $100. */
+  PRICE_ROUNDING_STEP: z.coerce.number().int().min(1).default(10000),
+
   // Cotización y carga de envíos vía API MiCorreo (Correo Argentino). Sin
   // estas variables se usa un proveedor simulado en dev/test y el precio de
   // respaldo configurado en el admin en producción.
@@ -77,6 +88,7 @@ export const isCloudinaryConfigured = Boolean(
 );
 export const isMercadoPagoConfigured = Boolean(env.MERCADOPAGO_ACCESS_TOKEN);
 export const isMercadoPagoWebhookSecretConfigured = Boolean(env.MERCADOPAGO_WEBHOOK_SECRET);
+export const isInvoiceExtractionConfigured = Boolean(env.ANTHROPIC_API_KEY);
 export const isResendConfigured = Boolean(env.RESEND_API_KEY);
 export const isCorreoArgentinoConfigured = Boolean(
   env.MICORREO_USER && env.MICORREO_PASSWORD && env.MICORREO_CUSTOMER_ID,

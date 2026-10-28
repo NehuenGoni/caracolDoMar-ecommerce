@@ -11,6 +11,11 @@ orderRouter.use(authenticate);
 
 orderRouter.get("/", validateRequest(listOrdersQuerySchema, "query"), orderController.listMyOrders);
 orderRouter.get("/:id", validateRequest(mongoIdParamSchema, "params"), orderController.getMyOrder);
+orderRouter.get(
+  "/:id/transfer",
+  validateRequest(mongoIdParamSchema, "params"),
+  orderController.getTransferInstructions,
+);
 orderRouter.post(
   "/:id/pay",
   validateRequest(mongoIdParamSchema, "params"),

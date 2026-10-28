@@ -1,4 +1,5 @@
 import type { ErrorRequestHandler } from "express";
+import multer from "multer";
 import { Error as MongooseError } from "mongoose";
 import { ZodError } from "zod";
 import { isProduction } from "../config/env.js";
@@ -32,6 +33,16 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
   if (err instanceof AppError) {
     const body: ErrorBody = { message: err.message, code: err.code, details: err.details };
     res.status(err.statusCode).json(body);
+    return;
+  }
+
+  if (err instanceof multer.MulterError) {
+    const tooBig = err.code === "LIMIT_FILE_SIZE";
+    const body: ErrorBody = {
+      message: tooBig ? "El archivo supera el máximo de 15 MB" : "No pudimos leer el archivo subido",
+      code: tooBig ? "FILE_TOO_LARGE" : "BAD_REQUEST",
+    };
+    res.status(tooBig ? 413 : 400).json(body);
     return;
   }
 

@@ -13,15 +13,19 @@ import AdminCashRegister from "@/pages/admin/AdminCashRegister";
 import AdminCategories from "@/pages/admin/AdminCategories";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminInventory from "@/pages/admin/AdminInventory";
+import AdminInvoiceImportReview from "@/pages/admin/AdminInvoiceImportReview";
+import AdminInvoiceImports from "@/pages/admin/AdminInvoiceImports";
 import AdminOrderDetail from "@/pages/admin/AdminOrderDetail";
 import AdminOrders from "@/pages/admin/AdminOrders";
 import AdminPos from "@/pages/admin/AdminPos";
 import AdminProductForm from "@/pages/admin/AdminProductForm";
 import AdminProducts from "@/pages/admin/AdminProducts";
+import AdminSettings from "@/pages/admin/AdminSettings";
 import AdminShipping from "@/pages/admin/AdminShipping";
 import AdminStoreSaleDetail from "@/pages/admin/AdminStoreSaleDetail";
 import AdminStoreSales from "@/pages/admin/AdminStoreSales";
 import AdminSupplierPurchases from "@/pages/admin/AdminSupplierPurchases";
+import AdminSuppliers from "@/pages/admin/AdminSuppliers";
 import StoreSaleTicket from "@/pages/admin/StoreSaleTicket";
 import Cart from "@/pages/Cart";
 import Catalog from "@/pages/Catalog";
@@ -54,6 +58,10 @@ export default function App() {
         <Route path="inventario" element={<AdminInventory />} />
         <Route path="envios" element={<AdminShipping />} />
         <Route path="compras" element={<AdminSupplierPurchases />} />
+        <Route path="compras/importaciones" element={<AdminInvoiceImports />} />
+        <Route path="compras/importaciones/:id" element={<AdminInvoiceImportReview />} />
+        <Route path="proveedores" element={<AdminSuppliers />} />
+        <Route path="ajustes" element={<AdminSettings />} />
         <Route path="caja" element={<AdminCashRegister />} />
         <Route path="ventas" element={<AdminPos />} />
         <Route path="ventas/historial" element={<AdminStoreSales />} />

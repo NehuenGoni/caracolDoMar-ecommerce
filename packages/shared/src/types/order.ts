@@ -9,6 +9,9 @@ export type OrderStatus =
   | "delivered"
   | "cancelled";
 
+/** Cómo paga el cliente: Mercado Pago (tarjeta, dinero en cuenta, efectivo) o transferencia bancaria. */
+export type PaymentMethod = "mercado_pago" | "transfer";
+
 export type PaymentStatus =
   | "pending"
   | "approved"
@@ -82,7 +85,7 @@ export interface Order extends WithTimestamps {
   total: number;
   status: OrderStatus;
   statusHistory: OrderStatusHistoryEntry[];
-  paymentMethod: string;
+  paymentMethod: PaymentMethod;
   paymentStatus: PaymentStatus;
   /**
    * Claves usadas: `preferenceId`, `initPoint` y `expiresAt` (link de pago

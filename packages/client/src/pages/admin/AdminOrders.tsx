@@ -1,6 +1,6 @@
 import { formatMoney } from "@caracol/shared";
 import type { OrderStatus } from "@caracol/shared";
-import { AlertTriangle, ShoppingCart } from "lucide-react";
+import { AlertTriangle, Landmark, ShoppingCart } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -25,9 +25,16 @@ export default function AdminOrders() {
   const [searchParams, setSearchParams] = useSearchParams();
   const status = (searchParams.get("status") as OrderStatus | null) ?? undefined;
   const needsReview = searchParams.get("needsReview") === "true";
+  const awaitingTransfer = searchParams.get("transferencias") === "true";
   const page = Number(searchParams.get("page") ?? "1");
 
-  const { data, isLoading } = useAdminOrders({ page, limit: PAGE_SIZE, status, needsReview: needsReview || undefined });
+  const { data, isLoading } = useAdminOrders({
+    page,
+    limit: PAGE_SIZE,
+    status,
+    needsReview: needsReview || undefined,
+    awaitingTransferReview: awaitingTransfer || undefined,
+  });
 
   function updateParams(next: Record<string, string | undefined>) {
     const params = new URLSearchParams(searchParams);
@@ -66,6 +73,18 @@ export default function AdminOrders() {
           }`}
         >
           <AlertTriangle className="size-4" /> Requiere revisión
+        </button>
+
+        <button
+          type="button"
+          onClick={() => updateParams({ transferencias: awaitingTransfer ? undefined : "true" })}
+          className={`flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-medium transition-colors ${
+            awaitingTransfer
+              ? "border-accent/40 bg-accent/10 text-accent-deep"
+              : "border-border bg-surface text-text-muted hover:bg-surface-alt"
+          }`}
+        >
+          <Landmark className="size-4" /> Transferencias por revisar
         </button>
       </div>
 

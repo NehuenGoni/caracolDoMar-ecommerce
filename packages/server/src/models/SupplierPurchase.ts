@@ -9,11 +9,16 @@ export interface ISupplierPurchaseItem {
 }
 
 export interface ISupplierPurchase {
+  /** Proveedor registrado (opcional: hay compras cargadas solo con el nombre). */
+  supplier?: Types.ObjectId;
+  /** Nombre del proveedor al momento de la compra. */
   supplierName: string;
   items: ISupplierPurchaseItem[];
   totalCost: number;
   purchaseDate: Date;
   notes?: string;
+  /** Clave que genera el cliente: reintentar el mismo envío no duplica la compra ni el stock. */
+  idempotencyKey?: string;
   createdBy: Types.ObjectId;
 }
 
@@ -32,6 +37,7 @@ const supplierPurchaseItemSchema = new Schema<ISupplierPurchaseItem>(
 
 const supplierPurchaseSchema = new Schema<ISupplierPurchase>(
   {
+    supplier: { type: Schema.Types.ObjectId, ref: "Supplier" },
     supplierName: { type: String, required: true, trim: true },
     items: {
       type: [supplierPurchaseItemSchema],
@@ -44,12 +50,19 @@ const supplierPurchaseSchema = new Schema<ISupplierPurchase>(
     totalCost: { type: Number, required: true, min: 0 },
     purchaseDate: { type: Date, required: true, default: () => new Date() },
     notes: { type: String },
+    idempotencyKey: { type: String },
     createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
   },
   { timestamps: true },
 );
 
 supplierPurchaseSchema.index({ purchaseDate: -1 });
+supplierPurchaseSchema.index({ supplier: 1, purchaseDate: -1 });
+// Parcial (solo cuando hay clave): las compras sin clave no chocan entre sí.
+supplierPurchaseSchema.index(
+  { idempotencyKey: 1 },
+  { unique: true, partialFilterExpression: { idempotencyKey: { $type: "string" } } },
+);
 
 export const SupplierPurchase =
   (mongoose.models.SupplierPurchase as Model<ISupplierPurchase>) ??

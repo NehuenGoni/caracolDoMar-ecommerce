@@ -1,4 +1,4 @@
-import type { Order, PaginatedResult } from "@caracol/shared";
+import type { Order, PaginatedResult, TransferInstructions } from "@caracol/shared";
 import { apiGet, apiPatch, apiPost } from "./apiClient.js";
 
 export const listMyOrders = (page = 1, limit = 10) =>
@@ -7,6 +7,9 @@ export const listMyOrders = (page = 1, limit = 10) =>
 export const getMyOrder = (id: string) => apiGet<{ order: Order }>(`/orders/${id}`);
 
 export const payMyOrder = (id: string) => apiPost<{ checkoutUrl: string }>(`/orders/${id}/pay`);
+
+export const getTransferInstructions = (id: string) =>
+  apiGet<TransferInstructions>(`/orders/${id}/transfer`);
 
 export const attachReceipt = (id: string, receiptUrl: string) =>
   apiPatch<{ order: Order }>(`/orders/${id}/receipt`, { receiptUrl });

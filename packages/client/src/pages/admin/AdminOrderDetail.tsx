@@ -1,7 +1,8 @@
-import { AlertTriangle, Paperclip } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { OrderStatusForm } from "@/components/admin/OrderStatusForm";
+import { TransferReviewCard } from "@/components/admin/TransferReviewCard";
 import { OrderSummaryCard } from "@/components/orders/OrderSummaryCard";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -151,22 +152,7 @@ export default function AdminOrderDetail() {
             </Card>
           )}
 
-          {order.receiptUrl && (
-            <Card>
-              <div className="flex items-center gap-2">
-                <Paperclip className="size-4 text-text-muted" />
-                <p className="font-display text-lg text-text">Comprobante</p>
-              </div>
-              <a
-                href={order.receiptUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-3 inline-block text-sm font-medium text-accent-deep hover:underline"
-              >
-                Ver comprobante adjunto
-              </a>
-            </Card>
-          )}
+          {order.paymentMethod === "transfer" && <TransferReviewCard order={order} onChange={setOrder} />}
 
           {order.statusHistory.length > 0 && (
             <Card>

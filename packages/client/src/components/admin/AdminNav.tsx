@@ -5,7 +5,9 @@ import {
   PackageCheck,
   Receipt,
   ScanBarcode,
+  Settings,
   ShoppingCart,
+  Store,
   Tags,
   Truck,
   UserCog,
@@ -24,7 +26,9 @@ const LINKS = [
   { to: "/admin/pedidos", label: "Pedidos", icon: ShoppingCart, end: false },
   { to: "/admin/inventario", label: "Inventario", icon: Warehouse, end: false },
   { to: "/admin/envios", label: "Envíos", icon: PackageCheck, end: false },
-  { to: "/admin/compras", label: "Compras a proveedores", icon: Truck, end: false },
+  { to: "/admin/compras", label: "Compras", icon: Truck, end: false },
+  { to: "/admin/proveedores", label: "Proveedores", icon: Store, end: false },
+  { to: "/admin/ajustes", label: "Ajustes", icon: Settings, end: false },
   { to: "/admin/administradores", label: "Administradores", icon: UserCog, end: false },
 ];
 

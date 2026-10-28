@@ -10,6 +10,7 @@ import { InlineMessage } from "@/components/ui/InlineMessage";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { useAdminCategories } from "@/hooks/admin/useAdminCategories";
+import { useSuppliers } from "@/hooks/admin/useSuppliers";
 import { ApiError } from "@/lib/apiClient";
 import type { ProductInput } from "@/lib/adminProductsApi";
 
@@ -33,6 +34,7 @@ function toValues(initial?: Partial<ProductInput>): ProductInput {
     images: initial?.images ?? [],
     videos: initial?.videos ?? [],
     isBundle: initial?.isBundle ?? false,
+    supplier: initial?.supplier ?? "",
     bundleItems: initial?.bundleItems ?? [],
     variants: initial?.variants ?? [
       { sku: "", attributes: [], price: 0, costPrice: 0, stock: 0, lowStockThreshold: 0, isUniquePiece: false },
@@ -42,6 +44,7 @@ function toValues(initial?: Partial<ProductInput>): ProductInput {
 
 export function ProductForm({ initialValue, onSubmit, submitLabel = "Guardar producto" }: ProductFormProps) {
   const { categories } = useAdminCategories();
+  const { suppliers } = useSuppliers();
   const [values, setValues] = useState<ProductInput>(() => toValues(initialValue));
   // Las variantes que vienen del servidor quedan con SKU y stock bloqueados; las que se agregan después no.
   const [lockedSkus] = useState<ReadonlySet<string>>(
@@ -85,6 +88,8 @@ export function ProductForm({ initialValue, onSubmit, submitLabel = "Guardar pro
         ...values,
         tags,
         slug: values.slug || undefined,
+        // Al editar, "" significa que se quitó el proveedor (null); al crear, simplemente no hay.
+        supplier: values.supplier || (isEditing ? null : undefined),
         bundleItems: values.isBundle
           ? components.map((c) => ({ product: c.productId, variantSku: c.variantSku, quantity: c.quantity }))
           : [],
@@ -129,6 +134,18 @@ export function ProductForm({ initialValue, onSubmit, submitLabel = "Guardar pro
           ))}
         </Select>
         <Input label="Marca (opcional)" value={values.brand} onChange={(e) => set("brand", e.target.value)} />
+        <Select
+          label="Proveedor habitual (opcional)"
+          value={values.supplier ?? ""}
+          onChange={(e) => set("supplier", e.target.value)}
+        >
+          <option value="">Sin proveedor</option>
+          {suppliers.map((supplier) => (
+            <option key={supplier._id} value={supplier._id}>
+              {supplier.name}
+            </option>
+          ))}
+        </Select>
       </div>
 
       <Input

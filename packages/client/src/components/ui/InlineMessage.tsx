@@ -1,18 +1,20 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Info } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-type Tone = "success" | "error";
+type Tone = "success" | "error" | "info";
 
 const toneClasses: Record<Tone, string> = {
   success: "bg-support/10 text-support border-support/30",
   error: "bg-accent2/10 text-accent2-deep border-accent2/30",
+  info: "bg-surface-alt text-text border-border",
 };
 
 const ToneIcon: Record<Tone, typeof AlertCircle> = {
   success: CheckCircle2,
   error: AlertCircle,
+  info: Info,
 };
 
 /** Feedback inline y animado, no un toast: los resultados importantes se muestran en contexto. */

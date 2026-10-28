@@ -9,7 +9,11 @@ export interface SupplierPurchaseItemInput {
 }
 
 export interface CreateSupplierPurchaseInput {
-  supplierName: string;
+  /** Proveedor registrado. Si no hay, va `supplierName`. */
+  supplierId?: string;
+  supplierName?: string;
+  /** Una clave por envío del formulario: reintentar (o el doble click) no duplica la compra. */
+  idempotencyKey?: string;
   items: SupplierPurchaseItemInput[];
   purchaseDate?: string;
   notes?: string;

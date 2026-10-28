@@ -1,5 +1,5 @@
 import { formatVariantLabel, type PaginatedResult, type StockMovementType } from "@caracol/shared";
-import type { FilterQuery } from "mongoose";
+import type { ClientSession, FilterQuery } from "mongoose";
 import { expandBundleItems } from "./bundleService.js";
 import { Product, type IProduct, type IProductVariant } from "../models/Product.js";
 import {
@@ -26,7 +26,11 @@ interface MovementMeta {
 }
 
 /** Inserción en lote: el log es append-only, no hace falta ni tiene sentido hacerlo secuencial. */
-export async function recordMovements(changes: StockChange[], meta: MovementMeta): Promise<void> {
+export async function recordMovements(
+  changes: StockChange[],
+  meta: MovementMeta,
+  session?: ClientSession,
+): Promise<void> {
   if (changes.length === 0) return;
   await StockMovement.insertMany(
     changes.map((change) => ({
@@ -40,6 +44,7 @@ export async function recordMovements(changes: StockChange[], meta: MovementMeta
       note: meta.note,
       createdBy: meta.createdBy,
     })),
+    { session },
   );
 }
 

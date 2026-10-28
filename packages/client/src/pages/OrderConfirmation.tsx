@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { OrderSummaryCard } from "@/components/orders/OrderSummaryCard";
 import { PayNowButton } from "@/components/orders/PayNowButton";
+import { TransferInstructionsCard } from "@/components/orders/TransferInstructionsCard";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { useMyOrder } from "@/hooks/useMyOrder";
@@ -29,7 +30,8 @@ export default function OrderConfirmation() {
   // El webhook de Mercado Pago puede tardar unos segundos: mientras el
   // pedido siga pending, reconsultamos hasta que se confirme o pase el tiempo.
   useEffect(() => {
-    if (!id || !liveOrder || liveOrder.status !== "pending") return;
+    // Las transferencias no tienen webhook: las confirma una persona, no hay nada que esperar acá.
+    if (!id || !liveOrder || liveOrder.status !== "pending" || liveOrder.paymentMethod === "transfer") return;
     if (Date.now() - pollStart.current > POLL_TIMEOUT_MS) return;
 
     const timeout = setTimeout(() => {
@@ -44,6 +46,7 @@ export default function OrderConfirmation() {
   if (isLoading) return <Spinner label="Buscando tu pedido…" />;
   if (error || !liveOrder) return <NotFound />;
 
+  const isTransfer = liveOrder.paymentMethod === "transfer";
   const isConfirmed = liveOrder.status !== "pending" && liveOrder.status !== "cancelled";
   const isCancelled = liveOrder.status === "cancelled";
   // Mercado Pago redirige de vuelta con esto cuando la tarjeta se rechazó o el pago quedó pendiente:
@@ -70,7 +73,15 @@ export default function OrderConfirmation() {
 
       <div>
         <h1 className="font-display text-2xl text-text">
-          {paymentDidNotComplete ? "El pago no se completó" : isConfirmed ? "¡Gracias por tu compra!" : "Estamos confirmando tu pago"}
+          {paymentDidNotComplete
+            ? isTransfer
+              ? "El pedido se canceló"
+              : "El pago no se completó"
+            : isConfirmed
+              ? "¡Gracias por tu compra!"
+              : isTransfer
+                ? "Reservamos tu pedido"
+                : "Estamos confirmando tu pago"}
         </h1>
         <p className="mt-1 text-sm text-text-muted">
           {paymentDidNotComplete
@@ -79,14 +90,22 @@ export default function OrderConfirmation() {
               : "Podés intentar el pago de nuevo cuando quieras."
             : isConfirmed
               ? "Te enviamos un email con los detalles de tu pedido."
-              : "Esto puede tardar unos segundos, no cierres esta página."}
+              : isTransfer
+                ? "Transferí el total y subí el comprobante para que podamos confirmarlo."
+                : "Esto puede tardar unos segundos, no cierres esta página."}
         </p>
-        {paymentDidNotComplete && !isCancelled && (
+        {paymentDidNotComplete && !isCancelled && !isTransfer && (
           <div className="mt-4 flex justify-center">
             <PayNowButton orderId={liveOrder._id} />
           </div>
         )}
       </div>
+
+      {isTransfer && (
+        <div className="w-full text-left">
+          <TransferInstructionsCard order={liveOrder} onOrderChange={setLiveOrder} />
+        </div>
+      )}
 
       <div className="w-full text-left">
         <OrderSummaryCard order={liveOrder} />

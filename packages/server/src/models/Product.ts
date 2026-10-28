@@ -62,6 +62,8 @@ export interface IProduct {
   variants: IProductVariant[];
   isBundle: boolean;
   bundleItems: IBundleItem[];
+  /** Proveedor habitual. Dato interno: no sale en la API pública. */
+  supplier?: Types.ObjectId;
 }
 
 export type ProductDocument = HydratedDocument<IProduct>;
@@ -131,6 +133,7 @@ const productSchema = new Schema<IProduct>(
     videos: { type: [productVideoSchema], default: [] },
     isBundle: { type: Boolean, default: false },
     bundleItems: { type: [bundleItemSchema], default: [] },
+    supplier: { type: Schema.Types.ObjectId, ref: "Supplier" },
     variants: {
       type: [productVariantSchema],
       default: [],

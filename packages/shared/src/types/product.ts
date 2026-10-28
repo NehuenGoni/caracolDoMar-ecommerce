@@ -67,6 +67,8 @@ export interface Product extends WithTimestamps {
    */
   isBundle: boolean;
   bundleItems: BundleItem[];
+  /** Proveedor habitual. Dato interno: la API pública no lo devuelve. */
+  supplier?: string;
   /** Solo en respuestas de la API, para kits. */
   bundleComponents?: BundleComponent[];
 }

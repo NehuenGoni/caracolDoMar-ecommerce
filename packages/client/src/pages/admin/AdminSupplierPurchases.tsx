@@ -1,7 +1,8 @@
 import { formatMoney } from "@caracol/shared";
 import { AnimatePresence, motion } from "framer-motion";
-import { Plus, Truck } from "lucide-react";
+import { FileText, Plus, Truck } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { SupplierPurchaseForm } from "@/components/admin/SupplierPurchaseForm";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -25,9 +26,16 @@ export default function AdminSupplierPurchases() {
       <div className="flex items-center justify-between gap-4">
         <h1 className="font-display text-2xl text-text">Compras a proveedores</h1>
         {!showForm && (
-          <Button onClick={() => setShowForm(true)}>
-            <Plus className="size-4" /> Nueva compra
-          </Button>
+          <div className="flex gap-3">
+            <Link to="/admin/compras/importaciones">
+              <Button variant="secondary">
+                <FileText className="size-4" /> Importar factura
+              </Button>
+            </Link>
+            <Button onClick={() => setShowForm(true)}>
+              <Plus className="size-4" /> Nueva compra
+            </Button>
+          </div>
         )}
       </div>
 

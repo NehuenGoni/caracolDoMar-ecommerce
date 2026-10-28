@@ -63,6 +63,8 @@ export const createProductSchema = z.object({
   isFeatured: z.boolean().optional(),
   images: z.array(imageSchema).default([]),
   videos: z.array(videoSchema).max(3, "Hasta 3 videos por producto").default([]),
+  /** `null` quita el proveedor. */
+  supplier: objectIdSchema.nullable().optional(),
   isBundle: z.boolean().default(false),
   bundleItems: z.array(bundleItemSchema).max(20, "Un kit admite hasta 20 componentes").default([]),
   variants: z.array(variantSchema).min(1, "El producto debe tener al menos una variante"),

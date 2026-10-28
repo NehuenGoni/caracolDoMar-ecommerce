@@ -56,6 +56,8 @@ export interface ProductInput {
   /** Solo se define al crear: un producto no se convierte en kit después. */
   isBundle: boolean;
   bundleItems: BundleItem[];
+  /** Proveedor habitual (`null` lo quita). */
+  supplier?: string | null;
 }
 
 function buildQuery(params: Record<string, unknown>): string {

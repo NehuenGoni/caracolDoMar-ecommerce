@@ -107,7 +107,7 @@ describe("listMyOrders / getMyOrderById", () => {
 describe("attachReceipt", () => {
   it("adjunta la URL del comprobante al pedido propio", async () => {
     const userId = new Types.ObjectId();
-    const { order } = await createOrderFor(userId);
+    const { order } = await createOrderFor(userId, { paymentMethod: "transfer", paymentStatus: "pending" });
 
     const updated = await orderService.attachReceipt(userId.toString(), order._id.toString(), {
       receiptUrl: "https://res.cloudinary.com/test-cloud/receipt.jpg",
@@ -117,7 +117,7 @@ describe("attachReceipt", () => {
 
   it("rechaza un comprobante que no es del Cloudinary de la tienda", async () => {
     const userId = new Types.ObjectId();
-    const { order } = await createOrderFor(userId);
+    const { order } = await createOrderFor(userId, { paymentMethod: "transfer", paymentStatus: "pending" });
 
     for (const receiptUrl of [
       "https://evil.example.com/receipt.jpg",
@@ -134,7 +134,7 @@ describe("attachReceipt", () => {
   it("rechaza adjuntar comprobante a un pedido ajeno", async () => {
     const userA = new Types.ObjectId();
     const userB = new Types.ObjectId();
-    const { order } = await createOrderFor(userA);
+    const { order } = await createOrderFor(userA, { paymentMethod: "transfer", paymentStatus: "pending" });
 
     await expect(
       orderService.attachReceipt(userB.toString(), order._id.toString(), {

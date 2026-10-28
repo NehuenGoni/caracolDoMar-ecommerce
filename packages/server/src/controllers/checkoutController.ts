@@ -1,7 +1,9 @@
 import type { Request, Response } from "express";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { runExpirationSweep } from "../jobs/expirePendingOrders.js";
+import { isMercadoPagoConfigured } from "../config/env.js";
 import * as checkoutService from "../services/checkoutService.js";
+import { getTransferSettings } from "../services/settingsService.js";
 import * as webhookService from "../services/webhookService.js";
 import { getNotificationDataId, getNotificationType } from "../utils/mercadoPagoNotification.js";
 import type { CreateCheckoutInput } from "../validators/checkoutValidators.js";
@@ -13,6 +15,14 @@ export const createCheckout = asyncHandler(async (req: Request, res: Response) =
   await runExpirationSweep();
   const { order, checkoutUrl } = await checkoutService.createOrderFromCart(req.user!.id, input);
   res.status(201).json({ order, checkoutUrl });
+});
+
+/** Qué métodos de pago se pueden usar hoy. Sin datos sensibles: la cuenta bancaria se muestra recién al comprar. */
+export const getPaymentOptions = asyncHandler(async (_req: Request, res: Response) => {
+  res.json({
+    mercadoPago: isMercadoPagoConfigured,
+    transfer: (await getTransferSettings()).enabled,
+  });
 });
 
 export const handleWebhook = asyncHandler(async (req: Request, res: Response) => {

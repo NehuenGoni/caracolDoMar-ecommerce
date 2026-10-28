@@ -8,6 +8,8 @@ import {
   orderConfirmationTemplate,
   orderStatusChangeTemplate,
   storeSaleReceiptTemplate,
+  transferInstructionsTemplate,
+  transferRejectedTemplate,
   type StoreSaleReceiptData,
   passwordResetTemplate,
   welcomeTemplate,
@@ -109,6 +111,22 @@ export function sendOrderConfirmationEmail(
   order: { orderNumber: number; total: number },
 ): void {
   const { subject, html } = orderConfirmationTemplate(user.firstName, order);
+  void sendEmail({ to: user.email, subject, html });
+}
+
+export function sendTransferInstructionsEmail(
+  user: { email: string; firstName: string },
+  data: Parameters<typeof transferInstructionsTemplate>[1],
+): void {
+  const { subject, html } = transferInstructionsTemplate(user.firstName, data);
+  void sendEmail({ to: user.email, subject, html });
+}
+
+export function sendTransferRejectedEmail(
+  user: { email: string; firstName: string },
+  data: Parameters<typeof transferRejectedTemplate>[1],
+): void {
+  const { subject, html } = transferRejectedTemplate(user.firstName, data);
   void sendEmail({ to: user.email, subject, html });
 }
 

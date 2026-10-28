@@ -3,7 +3,11 @@ import * as orderController from "../controllers/orderController.js";
 import { authenticate, requireRole } from "../middleware/authenticate.js";
 import { validateRequest } from "../middleware/validateRequest.js";
 import { mongoIdParamSchema } from "../validators/commonValidators.js";
-import { adminListOrdersQuerySchema, updateOrderStatusSchema } from "../validators/orderValidators.js";
+import {
+  adminListOrdersQuerySchema,
+  confirmTransferPaymentSchema,
+  updateOrderStatusSchema,
+} from "../validators/orderValidators.js";
 
 export const adminOrderRouter = Router();
 
@@ -20,6 +24,12 @@ adminOrderRouter.patch(
   validateRequest(mongoIdParamSchema, "params"),
   validateRequest(updateOrderStatusSchema),
   orderController.updateOrderStatus,
+);
+adminOrderRouter.post(
+  "/:id/transfer-review",
+  validateRequest(mongoIdParamSchema, "params"),
+  validateRequest(confirmTransferPaymentSchema),
+  orderController.reviewTransferPayment,
 );
 adminOrderRouter.post(
   "/:id/reactivate",
