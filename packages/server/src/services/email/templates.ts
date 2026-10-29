@@ -1,5 +1,5 @@
-import type { OrderStatus } from "@caracol/shared";
-import { formatMoney } from "@caracol/shared";
+import type { OrderStatus, StaffRole } from "@caracol/shared";
+import { ROLE_LABELS, formatMoney } from "@caracol/shared";
 import { env } from "../../config/env.js";
 
 interface EmailTemplate {
@@ -69,32 +69,34 @@ export function passwordResetTemplate(firstName: string, resetUrl: string): Emai
   };
 }
 
-export function adminInviteTemplate(inviteUrl: string): EmailTemplate {
+export function adminInviteTemplate(inviteUrl: string, role: StaffRole): EmailTemplate {
+  const label = ROLE_LABELS[role];
   return {
-    subject: "Invitación para administrar Caracol do Mar",
+    subject: "Te invitaron a sumarte al equipo de Caracol do Mar",
     html: wrapper(
-      "Te invitaron como administrador/a",
-      `<p style="color:${BRAND.textMuted};">Hacé clic en el botón para aceptar la invitación y crear tu cuenta de administrador.</p>${button(inviteUrl, "Aceptar invitación")}`,
+      `Te invitaron como ${label}`,
+      `<p style="color:${BRAND.textMuted};">Hacé clic en el botón para aceptar la invitación y crear tu cuenta. Vas a entrar al panel como ${label}.</p>${button(inviteUrl, "Aceptar invitación")}<p style="color:${BRAND.textMuted};font-size:12px;margin-top:16px;">La invitación vence en 7 días.</p>`,
     ),
   };
 }
 
-export function adminPromotedTemplate(firstName: string): EmailTemplate {
+export function adminPromotedTemplate(firstName: string, role: StaffRole): EmailTemplate {
+  const label = ROLE_LABELS[role];
   return {
-    subject: "Ahora sos administrador/a de Caracol do Mar",
+    subject: `Ahora sos ${label} de Caracol do Mar`,
     html: wrapper(
       `Hola ${firstName}`,
-      `<p style="color:${BRAND.textMuted};">Tu cuenta fue promovida a administrador/a. Ya podés acceder al panel de administración.</p>`,
+      `<p style="color:${BRAND.textMuted};">Tu cuenta ahora tiene el rol de ${label}. Ya podés entrar al panel.</p>`,
     ),
   };
 }
 
 export function adminRevokedTemplate(firstName: string): EmailTemplate {
   return {
-    subject: "Tu acceso de administrador fue revocado",
+    subject: "Tu acceso al panel de Caracol do Mar fue revocado",
     html: wrapper(
       `Hola ${firstName}`,
-      `<p style="color:${BRAND.textMuted};">Tu rol de administrador/a fue revocado. Tu cuenta sigue activa como cliente.</p>`,
+      `<p style="color:${BRAND.textMuted};">Ya no tenés acceso al panel de Caracol do Mar. Tu cuenta sigue activa como cliente.</p>`,
     ),
   };
 }

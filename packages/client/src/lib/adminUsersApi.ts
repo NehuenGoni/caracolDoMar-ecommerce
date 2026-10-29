@@ -1,9 +1,10 @@
-import type { User } from "@caracol/shared";
-import { apiGet, apiPost } from "./apiClient.js";
+import type { StaffRole, User } from "@caracol/shared";
+import { apiGet, apiPatch, apiPost } from "./apiClient.js";
 
-export interface AdminInvite {
+export interface StaffInvite {
   _id: string;
   email: string;
+  role: StaffRole;
   invitedBy: string;
   expiresAt: string;
   acceptedAt?: string;
@@ -11,12 +12,16 @@ export interface AdminInvite {
   createdAt: string;
 }
 
-export const inviteAdmin = (email: string) => apiPost<{ invite: AdminInvite }>("/admin/invites", { email });
+export const inviteStaff = (email: string, role: StaffRole) =>
+  apiPost<{ invite: StaffInvite }>("/admin/invites", { email, role });
 
-export const listPendingInvites = () => apiGet<{ invites: AdminInvite[] }>("/admin/invites");
+export const listPendingInvites = () => apiGet<{ invites: StaffInvite[] }>("/admin/invites");
 
 export const revokeInvite = (id: string) => apiPost<void>(`/admin/invites/${id}/revoke`);
 
-export const listAdmins = () => apiGet<{ admins: User[] }>("/admin/admins");
+export const listStaff = () => apiGet<{ staff: User[] }>("/admin/staff");
 
-export const revokeAdmin = (id: string) => apiPost<{ user: User }>(`/admin/admins/${id}/revoke`);
+export const changeStaffRole = (id: string, role: StaffRole) =>
+  apiPatch<{ user: User }>(`/admin/staff/${id}/role`, { role });
+
+export const revokeStaff = (id: string) => apiPost<{ user: User }>(`/admin/staff/${id}/revoke`);

@@ -1,3 +1,4 @@
+import { isStaff } from "@caracol/shared";
 import { AnimatePresence, motion } from "framer-motion";
 import { LogOut, Menu, Package, ShoppingBag, User as UserIcon, X } from "lucide-react";
 import { useState } from "react";
@@ -119,7 +120,7 @@ export function Header() {
                         >
                           <Package className="size-4" /> Mis pedidos
                         </Link>
-                        {user?.role === "admin" && (
+                        {isStaff(user?.role) && (
                           <Link
                             to="/admin"
                             onClick={() => setUserMenuOpen(false)}

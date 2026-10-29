@@ -1,4 +1,4 @@
-import type { User } from "@caracol/shared";
+import { hasPermission, type Permission, type User } from "@caracol/shared";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { setAccessToken, setAuthFailureHandler } from "@/lib/apiClient";
 import * as authApi from "@/lib/authApi";
@@ -11,6 +11,8 @@ interface AuthContextValue {
   register: (input: authApi.RegisterInput) => Promise<void>;
   logout: () => Promise<void>;
   acceptInvite: (input: authApi.AcceptInviteInput) => Promise<void>;
+  /** ¿Tiene el usuario actual este permiso? (comodidad de la UI: el server lo vuelve a chequear). */
+  can: (permission: Permission) => boolean;
   /** Actualiza el usuario en memoria tras una respuesta del backend (editar perfil, direcciones). */
   setUser: (user: User) => void;
 }
@@ -78,9 +80,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const can = useCallback((permission: Permission) => hasPermission(user?.role, permission), [user]);
+
   const value = useMemo<AuthContextValue>(
-    () => ({ user, isLoading, isAuthenticated: user !== null, login, register, logout, acceptInvite, setUser }),
-    [user, isLoading, login, register, logout, acceptInvite],
+    () => ({ user, isLoading, isAuthenticated: user !== null, login, register, logout, acceptInvite, can, setUser }),
+    [user, isLoading, login, register, logout, acceptInvite, can],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,3 +1,4 @@
+import { hasPermission } from "@caracol/shared";
 import type { Request, Response } from "express";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import * as productService from "../services/productService.js";
@@ -31,16 +32,19 @@ export const getProductBySlug = asyncHandler(async (req: Request, res: Response)
   res.json({ product });
 });
 
+/** El vendedor ve el catálogo en el panel, pero sin costos ni proveedores. */
+const canSeeCosts = (req: Request) => hasPermission(req.user?.role, "costs:read");
+
 export const adminListProducts = asyncHandler(async (req: Request, res: Response) => {
   const query = req.query as unknown as AdminListProductsQuery;
-  const result = await productService.listAdminProducts(query);
+  const result = await productService.listAdminProducts(query, canSeeCosts(req));
   res.json(result);
 });
 
 export const adminGetProduct = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params as unknown as MongoIdParam;
   const product = await productService.getAdminProductById(id);
-  res.json({ product: await productService.toAdminView(product) });
+  res.json({ product: await productService.toAdminView(product, canSeeCosts(req)) });
 });
 
 export const createProduct = asyncHandler(async (req: Request, res: Response) => {

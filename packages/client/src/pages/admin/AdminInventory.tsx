@@ -1,4 +1,5 @@
 import type { StockMovementType } from "@caracol/shared";
+import { useAuth } from "@/contexts/AuthContext";
 import { AlertTriangle, History } from "lucide-react";
 import { StockAdjustmentForm } from "@/components/admin/StockAdjustmentForm";
 import { Badge } from "@/components/ui/Badge";
@@ -23,6 +24,7 @@ const MOVEMENT_TONE: Record<StockMovementType, "neutral" | "accent" | "support" 
 };
 
 export default function AdminInventory() {
+  const { can } = useAuth();
   const { items: lowStock, isLoading: loadingLowStock, reload: reloadLowStock } = useLowStock();
   const { data: movements, isLoading: loadingMovements, reload: reloadMovements } = useStockMovements({ limit: 15 });
 
@@ -59,10 +61,12 @@ export default function AdminInventory() {
           )}
         </div>
 
-        <Card>
-          <p className="mb-4 font-display text-lg text-text">Ajustar stock</p>
-          <StockAdjustmentForm onAdjusted={handleAdjusted} />
-        </Card>
+        {can("inventory:adjust") && (
+          <Card>
+            <p className="mb-4 font-display text-lg text-text">Ajustar stock</p>
+            <StockAdjustmentForm onAdjusted={handleAdjusted} />
+          </Card>
+        )}
       </div>
 
       <div className="flex flex-col gap-3">

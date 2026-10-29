@@ -1,4 +1,5 @@
 import { formatMoney } from "@caracol/shared";
+import { useAuth } from "@/contexts/AuthContext";
 import { ArrowLeft, Printer } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -22,6 +23,7 @@ import {
 import { voidStoreSale } from "@/lib/storeSalesApi";
 
 export default function AdminStoreSaleDetail() {
+  const { can } = useAuth();
   const { id } = useParams<{ id: string }>();
   const { sale, setSale, isLoading, error } = useStoreSale(id);
   const { session } = useCurrentCashSession();
@@ -170,7 +172,7 @@ export default function AdminStoreSaleDetail() {
             </Card>
           )}
 
-          {canVoid && (
+          {canVoid && can("pos:void") && (
             <Card className="flex flex-col gap-3">
               <p className="font-display text-lg text-text">Anular venta</p>
               {showVoid ? (

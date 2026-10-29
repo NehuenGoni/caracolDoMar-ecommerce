@@ -42,6 +42,17 @@ Ecommerce/Gran Grow. Idioma de la UI y de los comentarios: español rioplatense.
   (24 h más si el admin rechaza uno). Los datos de la cuenta solo los ve el dueño del pedido.
 - **Importación de facturas con IA:** la IA nunca toca el catálogo; deja un borrador que revisa un admin.
   `anthropicService.ts` es el único archivo que importa el SDK (los tests lo mockean).
+- **Roles y permisos:** `customer | seller | admin`. Qué puede cada uno vive en un solo lugar:
+  `ROLE_PERMISSIONS` (`shared/src/constants/permissions.ts`). El server protege con
+  `requirePermission("...")`, nunca con el rol a mano; la UI usa `can("...")` (`useAuth`) solo para no
+  mostrar lo que no se puede usar. Un permiso nuevo = agregarlo ahí y en la ruta.
+- **El rol sale de la base, no del token:** `authenticate` lo relee (`utils/authCache.ts`, caché de 15 s
+  que se invalida al cambiar el rol). Revocar o degradar rige de inmediato. Cualquier lugar que cambie
+  `role` o `isActive` tiene que llamar `invalidateAuthCache`.
+- **`adminRouter` (equipo) se monta en `/api/admin` antes que los demás:** su permiso va ruta por ruta,
+  nunca con `router.use`, o le cierra el paso a todo lo que cuelga de `/api/admin`.
+- **El vendedor no ve costos ni proveedores:** los productos del panel salen por `serializeProducts` con
+  `costs:read`. Todo endpoint nuevo que devuelva costos tiene que pasar por ahí.
 - **Numeración** (pedidos, ventas, solicitudes): `Counter` / `getNextSequence()`.
 - **Integraciones opcionales:** cada una tiene un flag `isXConfigured` en `config/env.ts` y un
   fallback/mock. No hacer que el server dependa de una clave externa para arrancar.
@@ -65,4 +76,5 @@ Ecommerce/Gran Grow. Idioma de la UI y de los comentarios: español rioplatense.
 - Fase 3: hecha (proveedores, compras idempotentes y transaccionales, precios automáticos opcionales,
   transferencia bancaria, importación de facturas con IA). Las transacciones cubren compras e importación;
   el checkout y el POS siguen con compensación manual (funciona y está testeada).
-- Fases 4–7: roles admin+vendedor, reportes, SEO, identidad visual.
+- Fase 4: hecha (roles admin y vendedor, permisos por ruta, equipo con invitaciones por rol).
+- Fases 5–7: reportes, SEO, identidad visual.

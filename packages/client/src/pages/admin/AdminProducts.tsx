@@ -2,6 +2,7 @@ import { formatMoney } from "@caracol/shared";
 import { Package, Plus, Search, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/Badge";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -17,6 +18,8 @@ import { getMinPrice, getTotalStock, hasPriceRange } from "@/lib/productPricing"
 const PAGE_SIZE = 20;
 
 export default function AdminProducts() {
+  const { can } = useAuth();
+  const canWrite = can("products:write");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
@@ -49,12 +52,14 @@ export default function AdminProducts() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between gap-4">
         <h1 className="font-display text-2xl text-text">Productos</h1>
-        <Link
-          to="/admin/productos/nuevo"
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-on-primary transition-colors hover:bg-primary-strong"
-        >
-          <Plus className="size-4" /> Nuevo producto
-        </Link>
+        {canWrite && (
+          <Link
+            to="/admin/productos/nuevo"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-on-primary transition-colors hover:bg-primary-strong"
+          >
+            <Plus className="size-4" /> Nuevo producto
+          </Link>
+        )}
       </div>
 
       <div className="relative max-w-sm">
@@ -79,7 +84,12 @@ export default function AdminProducts() {
           <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface">
             {data.items.map((product) => (
               <div key={product._id} className="flex items-center justify-between gap-3 px-5 py-4">
-                <Link to={`/admin/productos/${product._id}`} className="flex min-w-0 items-center gap-3">
+                <Link
+                  to={`/admin/productos/${product._id}`}
+                  // Quien solo mira el catálogo no entra al formulario de edición.
+                  onClick={(e) => !canWrite && e.preventDefault()}
+                  className={`flex min-w-0 items-center gap-3 ${canWrite ? "" : "cursor-default"}`}
+                >
                   {product.images[0] ? (
                     <img
                       src={product.images[0].url}
@@ -104,6 +114,7 @@ export default function AdminProducts() {
                   {product.isFeatured && <Badge tone="accent">Destacado</Badge>}
                   {product.isBundle && <Badge tone="neutral">Kit</Badge>}
                   {product.variants.some((v) => v.isUniquePiece) && <Badge tone="neutral">Pieza única</Badge>}
+                  {canWrite && (
                   <button
                     type="button"
                     onClick={() => setPendingDelete(product._id)}
@@ -112,6 +123,7 @@ export default function AdminProducts() {
                   >
                     <Trash2 className="size-4" />
                   </button>
+                  )}
                 </div>
               </div>
             ))}

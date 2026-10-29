@@ -1,6 +1,6 @@
 import { Router } from "express";
 import * as supplierPurchaseController from "../controllers/supplierPurchaseController.js";
-import { authenticate, requireRole } from "../middleware/authenticate.js";
+import { authenticate, requirePermission } from "../middleware/authenticate.js";
 import { validateRequest } from "../middleware/validateRequest.js";
 import { mongoIdParamSchema } from "../validators/commonValidators.js";
 import {
@@ -10,7 +10,7 @@ import {
 
 export const supplierPurchaseRouter = Router();
 
-supplierPurchaseRouter.use(authenticate, requireRole("admin"));
+supplierPurchaseRouter.use(authenticate, requirePermission("purchases:manage"));
 
 supplierPurchaseRouter.post(
   "/",

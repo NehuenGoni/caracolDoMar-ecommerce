@@ -19,10 +19,12 @@ const STATUS_OPTIONS: { value: OrderStatus; label: string }[] = [
 
 interface OrderStatusFormProps {
   order: Order;
+  /** Cancelar devuelve el stock: solo quien puede gestionar pedidos lo ofrece. */
+  canCancel?: boolean;
   onSubmit: (input: UpdateOrderStatusInput) => Promise<void>;
 }
 
-export function OrderStatusForm({ order, onSubmit }: OrderStatusFormProps) {
+export function OrderStatusForm({ order, onSubmit, canCancel = true }: OrderStatusFormProps) {
   const [status, setStatus] = useState<OrderStatus>(order.status);
   const [trackingNumber, setTrackingNumber] = useState(order.trackingNumber ?? "");
   const [note, setNote] = useState("");
@@ -49,7 +51,7 @@ export function OrderStatusForm({ order, onSubmit }: OrderStatusFormProps) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <Select label="Estado" value={status} onChange={(e) => setStatus(e.target.value as OrderStatus)}>
-        {STATUS_OPTIONS.map((option) => (
+        {STATUS_OPTIONS.filter((option) => canCancel || option.value !== "cancelled" || order.status === "cancelled").map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}
           </option>

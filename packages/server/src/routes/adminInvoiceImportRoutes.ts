@@ -2,7 +2,7 @@ import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { isTest } from "../config/env.js";
 import * as controller from "../controllers/supplierInvoiceImportController.js";
-import { authenticate, requireRole } from "../middleware/authenticate.js";
+import { authenticate, requirePermission } from "../middleware/authenticate.js";
 import { invoiceUpload } from "../middleware/uploadFile.js";
 import { validateRequest } from "../middleware/validateRequest.js";
 import { mongoIdParamSchema } from "../validators/commonValidators.js";
@@ -27,7 +27,7 @@ const uploadLimiter = rateLimit({
 
 export const adminInvoiceImportRouter = Router();
 
-adminInvoiceImportRouter.use(authenticate, requireRole("admin"));
+adminInvoiceImportRouter.use(authenticate, requirePermission("purchases:manage"));
 
 adminInvoiceImportRouter.get("/status", controller.getStatus);
 adminInvoiceImportRouter.post(

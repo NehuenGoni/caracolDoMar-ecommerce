@@ -184,7 +184,8 @@ export async function acceptInvite(
     user.password = input.password;
     user.firstName = input.firstName;
     user.lastName = input.lastName;
-    user.role = "admin";
+    // Si mientras tanto ya lo hicieron admin, una invitación de vendedor no lo degrada.
+    if (user.role !== "admin") user.role = invite.role;
     await user.save();
   } else {
     user = await User.create({
@@ -192,14 +193,14 @@ export async function acceptInvite(
       password: input.password,
       firstName: input.firstName,
       lastName: input.lastName,
-      role: "admin",
+      role: invite.role,
     });
   }
 
   invite.acceptedAt = new Date();
   await invite.save();
 
-  sendAdminPromotedEmail(user);
+  sendAdminPromotedEmail(user, user.role === "admin" ? "admin" : "seller");
 
   const tokens = await issueTokenPair(user);
   return { user, ...tokens };

@@ -1,4 +1,6 @@
-import { Route, Routes } from "react-router-dom";
+import type { Permission } from "@caracol/shared";
+import type { ReactNode } from "react";
+import { Route, Routes, Navigate } from "react-router-dom";
 import { AccountLayout } from "@/components/layout/AccountLayout";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
@@ -8,10 +10,10 @@ import AccountAddresses from "@/pages/account/AccountAddresses";
 import AccountOrderDetail from "@/pages/account/AccountOrderDetail";
 import AccountOrders from "@/pages/account/AccountOrders";
 import AccountProfile from "@/pages/account/AccountProfile";
-import AdminAdmins from "@/pages/admin/AdminAdmins";
+import AdminHome from "@/pages/admin/AdminHome";
+import AdminTeam from "@/pages/admin/AdminTeam";
 import AdminCashRegister from "@/pages/admin/AdminCashRegister";
 import AdminCategories from "@/pages/admin/AdminCategories";
-import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminInventory from "@/pages/admin/AdminInventory";
 import AdminInvoiceImportReview from "@/pages/admin/AdminInvoiceImportReview";
 import AdminInvoiceImports from "@/pages/admin/AdminInvoiceImports";
@@ -44,36 +46,46 @@ import Register from "@/pages/Register";
 import ResetPassword from "@/pages/ResetPassword";
 import Terminos from "@/pages/Terminos";
 
+/** Dentro del panel: quien no tiene el permiso vuelve al inicio del panel (que lo lleva a lo suyo). */
+function guard(permission: Permission, element: ReactNode) {
+  return (
+    <ProtectedRoute permission={permission} redirectTo="/admin">
+      {element}
+    </ProtectedRoute>
+  );
+}
+
 export default function App() {
   return (
     <Routes>
       <Route path="admin" element={<AdminLayout />}>
-        <Route index element={<AdminDashboard />} />
-        <Route path="productos" element={<AdminProducts />} />
-        <Route path="productos/nuevo" element={<AdminProductForm />} />
-        <Route path="productos/:id" element={<AdminProductForm />} />
-        <Route path="categorias" element={<AdminCategories />} />
-        <Route path="pedidos" element={<AdminOrders />} />
-        <Route path="pedidos/:id" element={<AdminOrderDetail />} />
-        <Route path="inventario" element={<AdminInventory />} />
-        <Route path="envios" element={<AdminShipping />} />
-        <Route path="compras" element={<AdminSupplierPurchases />} />
-        <Route path="compras/importaciones" element={<AdminInvoiceImports />} />
-        <Route path="compras/importaciones/:id" element={<AdminInvoiceImportReview />} />
-        <Route path="proveedores" element={<AdminSuppliers />} />
-        <Route path="ajustes" element={<AdminSettings />} />
-        <Route path="caja" element={<AdminCashRegister />} />
-        <Route path="ventas" element={<AdminPos />} />
-        <Route path="ventas/historial" element={<AdminStoreSales />} />
-        <Route path="ventas/:id" element={<AdminStoreSaleDetail />} />
-        <Route path="administradores" element={<AdminAdmins />} />
+        <Route index element={<AdminHome />} />
+        <Route path="productos" element={guard("products:read", <AdminProducts />)} />
+        <Route path="productos/nuevo" element={guard("products:write", <AdminProductForm />)} />
+        <Route path="productos/:id" element={guard("products:write", <AdminProductForm />)} />
+        <Route path="categorias" element={guard("catalog:manage", <AdminCategories />)} />
+        <Route path="pedidos" element={guard("orders:read", <AdminOrders />)} />
+        <Route path="pedidos/:id" element={guard("orders:read", <AdminOrderDetail />)} />
+        <Route path="inventario" element={guard("inventory:read", <AdminInventory />)} />
+        <Route path="envios" element={guard("settings:manage", <AdminShipping />)} />
+        <Route path="compras" element={guard("purchases:manage", <AdminSupplierPurchases />)} />
+        <Route path="compras/importaciones" element={guard("purchases:manage", <AdminInvoiceImports />)} />
+        <Route path="compras/importaciones/:id" element={guard("purchases:manage", <AdminInvoiceImportReview />)} />
+        <Route path="proveedores" element={guard("purchases:manage", <AdminSuppliers />)} />
+        <Route path="ajustes" element={guard("settings:manage", <AdminSettings />)} />
+        <Route path="caja" element={guard("cash:operate", <AdminCashRegister />)} />
+        <Route path="ventas" element={guard("pos:sell", <AdminPos />)} />
+        <Route path="ventas/historial" element={guard("pos:sell", <AdminStoreSales />)} />
+        <Route path="ventas/:id" element={guard("pos:sell", <AdminStoreSaleDetail />)} />
+        <Route path="equipo" element={guard("users:manage", <AdminTeam />)} />
+        <Route path="administradores" element={<Navigate to="/admin/equipo" replace />} />
       </Route>
 
       {/* Fuera del AdminLayout a propósito: al imprimir debe salir solo el ticket. */}
       <Route
         path="admin/ventas/:id/ticket"
         element={
-          <ProtectedRoute role="admin">
+          <ProtectedRoute permission="pos:sell">
             <StoreSaleTicket />
           </ProtectedRoute>
         }

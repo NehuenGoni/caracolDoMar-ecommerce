@@ -23,92 +23,154 @@ afterEach(() => {
 });
 afterAll(closeTestDB);
 
-async function createUser(role: "admin" | "customer") {
+type Role = "admin" | "seller" | "customer";
+
+async function createUser(role: Role) {
   const user = await User.create({
     email: `${role}-${Date.now()}-${Math.random()}@example.com`,
     password: "supersecreto123",
-    firstName: role === "admin" ? "Admin" : "Cliente",
-    lastName: "Test",
+    firstName: "Test",
+    lastName: role,
     role,
   });
   const token = signAccessToken({ sub: user._id.toString(), role: user.role });
-  return { user, token };
+  return { user, token, auth: { Authorization: `Bearer ${token}` } };
 }
 
-describe("protección por rol en /api/admin", () => {
+describe("protección de /api/admin", () => {
   it("rechaza sin autenticación", async () => {
-    const res = await request(app).get("/api/admin/admins");
-    expect(res.status).toBe(401);
+    expect((await request(app).get("/api/admin/staff")).status).toBe(401);
   });
 
-  it("rechaza a un customer autenticado", async () => {
-    const { token } = await createUser("customer");
-    const res = await request(app).get("/api/admin/admins").set("Authorization", `Bearer ${token}`);
-    expect(res.status).toBe(403);
+  it("rechaza a un cliente y también a un vendedor: el equipo lo maneja solo un admin", async () => {
+    for (const role of ["customer", "seller"] as const) {
+      const { auth } = await createUser(role);
+      expect((await request(app).get("/api/admin/staff").set(auth)).status).toBe(403);
+      expect((await request(app).post("/api/admin/invites").set(auth).send({ email: "x@example.com" })).status).toBe(403);
+    }
   });
 });
 
-describe("flujo completo de invitaciones y administradores", () => {
-  it("invita, lista, revoca invitación y luego revoca un admin", async () => {
-    const { user: admin1, token: token1 } = await createUser("admin");
-    const { token: token2 } = await createUser("admin");
+describe("invitaciones", () => {
+  it("por defecto invita como vendedor (el rol de menos permisos)", async () => {
+    const { auth } = await createUser("admin");
+    const res = await request(app).post("/api/admin/invites").set(auth).send({ email: "nueva@example.com" });
+    expect(res.status).toBe(201);
+    expect(res.body.invite.role).toBe("seller");
+  });
 
-    const inviteRes = await request(app)
-      .post("/api/admin/invites")
-      .set("Authorization", `Bearer ${token1}`)
-      .send({ email: "nuevo-admin@example.com" });
-    expect(inviteRes.status).toBe(201);
+  it("invita con el rol elegido y lo muestra en las pendientes", async () => {
+    const { auth } = await createUser("admin");
+    await request(app).post("/api/admin/invites").set(auth).send({ email: "otro-admin@example.com", role: "admin" }).expect(201);
 
-    const listRes = await request(app)
-      .get("/api/admin/invites")
-      .set("Authorization", `Bearer ${token1}`);
-    expect(listRes.status).toBe(200);
-    expect(listRes.body.invites).toHaveLength(1);
+    const list = await request(app).get("/api/admin/invites").set(auth).expect(200);
+    expect(list.body.invites).toHaveLength(1);
+    expect(list.body.invites[0]).toMatchObject({ email: "otro-admin@example.com", role: "admin" });
+  });
 
-    const inviteId = listRes.body.invites[0]._id;
-    const revokeInviteRes = await request(app)
-      .post(`/api/admin/invites/${inviteId}/revoke`)
-      .set("Authorization", `Bearer ${token1}`);
-    expect(revokeInviteRes.status).toBe(204);
+  it("rechaza un rol que no existe, y 'customer' no es un rol de equipo", async () => {
+    const { auth } = await createUser("admin");
+    await request(app).post("/api/admin/invites").set(auth).send({ email: "x@example.com", role: "superadmin" }).expect(400);
+    await request(app).post("/api/admin/invites").set(auth).send({ email: "x@example.com", role: "customer" }).expect(400);
+  });
 
-    const adminsRes = await request(app).get("/api/admin/admins").set("Authorization", `Bearer ${token1}`);
-    expect(adminsRes.status).toBe(200);
-    expect(adminsRes.body.admins).toHaveLength(2);
+  it("se puede revocar una invitación pendiente", async () => {
+    const { auth } = await createUser("admin");
+    await request(app).post("/api/admin/invites").set(auth).send({ email: "a@example.com" }).expect(201);
+    const list = await request(app).get("/api/admin/invites").set(auth);
 
-    const revokeAdminRes = await request(app)
-      .post(`/api/admin/admins/${admin1._id.toString()}/revoke`)
-      .set("Authorization", `Bearer ${token2}`);
-    expect(revokeAdminRes.status).toBe(200);
-    expect(revokeAdminRes.body.user.role).toBe("customer");
+    await request(app).post(`/api/admin/invites/${list.body.invites[0]._id}/revoke`).set(auth).expect(204);
+    expect((await request(app).get("/api/admin/invites").set(auth)).body.invites).toHaveLength(0);
+  });
+});
+
+describe("el equipo", () => {
+  it("lista admins y vendedores", async () => {
+    const { auth } = await createUser("admin");
+    await createUser("seller");
+    await createUser("customer");
+
+    const res = await request(app).get("/api/admin/staff").set(auth).expect(200);
+    expect(res.body.staff.map((u: { role: string }) => u.role).sort()).toEqual(["admin", "seller"]);
+  });
+
+  it("cambia el rol de un vendedor a admin", async () => {
+    const { auth } = await createUser("admin");
+    const { user: seller } = await createUser("seller");
+
+    const res = await request(app)
+      .patch(`/api/admin/staff/${seller._id}/role`)
+      .set(auth)
+      .send({ role: "admin" })
+      .expect(200);
+    expect(res.body.user.role).toBe("admin");
+  });
+
+  it("no deja cambiarse el rol a uno mismo ni usar un rol inválido", async () => {
+    const { user, auth } = await createUser("admin");
+    await request(app).patch(`/api/admin/staff/${user._id}/role`).set(auth).send({ role: "seller" }).expect(403);
+    await request(app).patch(`/api/admin/staff/${user._id}/role`).set(auth).send({ role: "customer" }).expect(400);
+  });
+
+  it("revoca a un vendedor", async () => {
+    const { auth } = await createUser("admin");
+    const { user: seller } = await createUser("seller");
+
+    const res = await request(app).post(`/api/admin/staff/${seller._id}/revoke`).set(auth).expect(200);
+    expect(res.body.user.role).toBe("customer");
   });
 
   it("rechaza que el único admin se revoque a sí mismo", async () => {
-    const { user, token } = await createUser("admin");
-    const res = await request(app)
-      .post(`/api/admin/admins/${user._id.toString()}/revoke`)
-      .set("Authorization", `Bearer ${token}`);
+    const { user, auth } = await createUser("admin");
+    expect((await request(app).post(`/api/admin/staff/${user._id}/revoke`).set(auth)).status).toBe(403);
+  });
+
+  it("no deja al negocio sin administradores", async () => {
+    const { user: admin1, auth: auth1 } = await createUser("admin");
+    const { user: admin2, auth: auth2 } = await createUser("admin");
+
+    await request(app).post(`/api/admin/staff/${admin2._id}/revoke`).set(auth1).expect(200);
+
+    // El admin2 ya no es admin: su token viejo no le sirve para sacar al último.
+    const res = await request(app).post(`/api/admin/staff/${admin1._id}/revoke`).set(auth2);
     expect(res.status).toBe(403);
+    expect((await User.findById(admin1._id))?.role).toBe("admin");
   });
 
-  it("rechaza dejar el sistema sin administradores", async () => {
-    const { user: admin1, token: token1 } = await createUser("admin");
-    const { user: admin2, token: token2 } = await createUser("admin");
+  it("valida el formato del id", async () => {
+    const { auth } = await createUser("admin");
+    expect((await request(app).post("/api/admin/staff/no-es-un-id/revoke").set(auth)).status).toBe(400);
+    expect((await request(app).patch("/api/admin/staff/no-es-un-id/role").set(auth).send({ role: "admin" })).status).toBe(400);
+  });
+});
 
-    await request(app)
-      .post(`/api/admin/admins/${admin2._id.toString()}/revoke`)
-      .set("Authorization", `Bearer ${token1}`);
+describe("los cambios rigen de inmediato, sin esperar a que venza el token", () => {
+  it("un admin degradado a vendedor pierde el acceso a lo del admin en la misma sesión", async () => {
+    const { auth: boss } = await createUser("admin");
+    const { user, auth: staff } = await createUser("admin");
 
-    const res = await request(app)
-      .post(`/api/admin/admins/${admin1._id.toString()}/revoke`)
-      .set("Authorization", `Bearer ${token2}`);
-    expect(res.status).toBe(409);
+    await request(app).get("/api/admin/staff").set(staff).expect(200);
+    await request(app).patch(`/api/admin/staff/${user._id}/role`).set(boss).send({ role: "seller" }).expect(200);
+
+    await request(app).get("/api/admin/staff").set(staff).expect(403);
   });
 
-  it("valida el formato del id en los params", async () => {
-    const { token } = await createUser("admin");
-    const res = await request(app)
-      .post("/api/admin/admins/no-es-un-id/revoke")
-      .set("Authorization", `Bearer ${token}`);
-    expect(res.status).toBe(400);
+  it("alguien revocado deja de entrar al panel con el mismo token", async () => {
+    const { auth: boss } = await createUser("admin");
+    const { user, auth: seller } = await createUser("seller");
+
+    await request(app).get("/api/inventory/low-stock").set(seller).expect(200);
+    await request(app).post(`/api/admin/staff/${user._id}/revoke`).set(boss).expect(200);
+
+    await request(app).get("/api/inventory/low-stock").set(seller).expect(403);
+  });
+
+  it("una cuenta desactivada queda afuera de inmediato", async () => {
+    const { user, auth } = await createUser("seller");
+    await request(app).get("/api/inventory/low-stock").set(auth).expect(200);
+
+    await User.updateOne({ _id: user._id }, { isActive: false });
+
+    await request(app).get("/api/inventory/low-stock").set(auth).expect(401);
   });
 });

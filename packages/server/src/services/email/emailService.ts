@@ -1,4 +1,4 @@
-import type { OrderStatus } from "@caracol/shared";
+import type { OrderStatus, StaffRole } from "@caracol/shared";
 import { Resend } from "resend";
 import { env, isResendConfigured } from "../../config/env.js";
 import {
@@ -91,13 +91,13 @@ export function sendPasswordResetEmail(
   void sendEmail({ to: user.email, subject, html });
 }
 
-export function sendAdminInviteEmail(email: string, inviteUrl: string): void {
-  const { subject, html } = adminInviteTemplate(inviteUrl);
+export function sendAdminInviteEmail(email: string, inviteUrl: string, role: StaffRole): void {
+  const { subject, html } = adminInviteTemplate(inviteUrl, role);
   void sendEmail({ to: email, subject, html });
 }
 
-export function sendAdminPromotedEmail(user: { email: string; firstName: string }): void {
-  const { subject, html } = adminPromotedTemplate(user.firstName);
+export function sendAdminPromotedEmail(user: { email: string; firstName: string }, role: StaffRole): void {
+  const { subject, html } = adminPromotedTemplate(user.firstName, role);
   void sendEmail({ to: user.email, subject, html });
 }
 

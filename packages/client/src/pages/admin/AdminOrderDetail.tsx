@@ -1,6 +1,7 @@
 import { AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { OrderStatusForm } from "@/components/admin/OrderStatusForm";
 import { TransferReviewCard } from "@/components/admin/TransferReviewCard";
 import { OrderSummaryCard } from "@/components/orders/OrderSummaryCard";
@@ -19,6 +20,7 @@ import {
 } from "@/lib/adminOrdersApi";
 
 export default function AdminOrderDetail() {
+  const { can } = useAuth();
   const { id } = useParams<{ id: string }>();
   const { order, isLoading, error, setOrder } = useAdminOrder(id);
   const [resolutionError, setResolutionError] = useState<string | null>(null);
@@ -79,7 +81,9 @@ export default function AdminOrderDetail() {
   if (isLoading) return <Spinner label="Buscando el pedido…" />;
   if (error || !order) return <p className="text-sm text-text-muted">Pedido no encontrado.</p>;
 
-  const needsReview = order.paymentIssue && !order.paymentIssue.resolvedAt;
+  // Reactivar, reembolsar y confirmar transferencias mueve plata y stock: solo con `orders:manage`.
+  const canManage = can("orders:manage");
+  const needsReview = canManage && order.paymentIssue && !order.paymentIssue.resolvedAt;
   const canImportToCarrier =
     order.shippingMethod === "home" && order.paymentStatus === "approved" && !order.shippingDetails?.carrierImportedAt;
 
@@ -121,7 +125,7 @@ export default function AdminOrderDetail() {
         <div className="flex flex-col gap-6">
           <Card>
             <p className="mb-4 font-display text-lg text-text">Actualizar estado</p>
-            <OrderStatusForm order={order} onSubmit={handleStatusUpdate} />
+            <OrderStatusForm order={order} onSubmit={handleStatusUpdate} canCancel={canManage} />
           </Card>
 
           {(canImportToCarrier || order.shippingDetails?.carrierImportedAt) && (
@@ -152,7 +156,7 @@ export default function AdminOrderDetail() {
             </Card>
           )}
 
-          {order.paymentMethod === "transfer" && <TransferReviewCard order={order} onChange={setOrder} />}
+          {canManage && order.paymentMethod === "transfer" && <TransferReviewCard order={order} onChange={setOrder} />}
 
           {order.statusHistory.length > 0 && (
             <Card>

@@ -170,13 +170,14 @@ export async function getPublicProductBySlug(
 
 export async function listAdminProducts(
   query: AdminListProductsQuery,
-): Promise<PaginatedResult<ProductView>> {
+  canSeeCosts = true,
+): Promise<PaginatedResult<ProductView | PublicProductView>> {
   const filter = await buildFilter(query, {
     includeInactive: query.includeInactive,
     hideSoldOutUniquePieces: false,
   });
   const result = await paginate(filter, query);
-  return { ...result, items: await serializeProducts(result.items, true) };
+  return { ...result, items: await serializeProducts(result.items, canSeeCosts) };
 }
 
 export async function getAdminProductById(id: string): Promise<ProductDocument> {
@@ -185,9 +186,12 @@ export async function getAdminProductById(id: string): Promise<ProductDocument> 
   return product;
 }
 
-export async function toAdminView(product: ProductDocument): Promise<ProductView> {
-  const [view] = await serializeProducts([product], true);
-  return view as ProductView;
+export async function toAdminView(
+  product: ProductDocument,
+  canSeeCosts = true,
+): Promise<ProductView | PublicProductView> {
+  const [view] = await serializeProducts([product], canSeeCosts);
+  return view as ProductView | PublicProductView;
 }
 
 export interface CatalogFacets {

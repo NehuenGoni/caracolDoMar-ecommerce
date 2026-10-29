@@ -1,18 +1,16 @@
 import type { Request, Response } from "express";
 import * as adminService from "../services/adminService.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
-import type { InviteAdminInput } from "../validators/adminValidators.js";
+import type { ChangeStaffRoleInput, InviteStaffInput } from "../validators/adminValidators.js";
 import type { MongoIdParam } from "../validators/commonValidators.js";
 
-export const inviteAdmin = asyncHandler(async (req: Request, res: Response) => {
-  const input = req.body as InviteAdminInput;
-  const invite = await adminService.inviteAdmin(input, req.user!.id);
+export const inviteStaff = asyncHandler(async (req: Request, res: Response) => {
+  const invite = await adminService.inviteStaff(req.body as InviteStaffInput, req.user!.id);
   res.status(201).json({ invite });
 });
 
 export const listPendingInvites = asyncHandler(async (_req: Request, res: Response) => {
-  const invites = await adminService.listPendingInvites();
-  res.json({ invites });
+  res.json({ invites: await adminService.listPendingInvites() });
 });
 
 export const revokeInvite = asyncHandler(async (req: Request, res: Response) => {
@@ -21,13 +19,19 @@ export const revokeInvite = asyncHandler(async (req: Request, res: Response) => 
   res.status(204).send();
 });
 
-export const listAdmins = asyncHandler(async (_req: Request, res: Response) => {
-  const admins = await adminService.listAdmins();
-  res.json({ admins });
+export const listStaff = asyncHandler(async (_req: Request, res: Response) => {
+  res.json({ staff: await adminService.listStaff() });
 });
 
-export const revokeAdmin = asyncHandler(async (req: Request, res: Response) => {
+export const changeStaffRole = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params as unknown as MongoIdParam;
-  const user = await adminService.revokeAdmin(id, req.user!.id);
+  const { role } = req.body as ChangeStaffRoleInput;
+  const user = await adminService.changeStaffRole(id, role, req.user!.id);
+  res.json({ user });
+});
+
+export const revokeStaff = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params as unknown as MongoIdParam;
+  const user = await adminService.revokeStaff(id, req.user!.id);
   res.json({ user });
 });

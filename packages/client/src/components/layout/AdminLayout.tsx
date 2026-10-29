@@ -17,7 +17,7 @@ export function AdminLayout() {
   }
 
   return (
-    <ProtectedRoute role="admin">
+    <ProtectedRoute staff>
       <div className="min-h-screen bg-bg">
         <header className="sticky top-0 z-40 border-b border-border bg-surface">
           <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">

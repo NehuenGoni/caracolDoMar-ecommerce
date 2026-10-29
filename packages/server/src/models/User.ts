@@ -61,7 +61,7 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>(
     firstName: { type: String, required: true, trim: true },
     lastName: { type: String, required: true, trim: true },
     phone: { type: String, trim: true },
-    role: { type: String, enum: ["customer", "admin"], default: "customer" },
+    role: { type: String, enum: ["customer", "seller", "admin"], default: "customer" },
     addresses: { type: [addressSchema], default: [] },
     isActive: { type: Boolean, default: true },
   },

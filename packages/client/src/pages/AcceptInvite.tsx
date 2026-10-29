@@ -42,7 +42,7 @@ export default function AcceptInvite() {
   }
 
   return (
-    <AuthCard title="Aceptar invitación" subtitle="Completá tus datos para crear tu cuenta de administrador.">
+    <AuthCard title="Aceptar invitación" subtitle="Completá tus datos para crear tu cuenta del equipo de Caracol do Mar.">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-3">
           <Input label="Nombre" required value={firstName} onChange={(e) => setFirstName(e.target.value)} />
@@ -60,7 +60,7 @@ export default function AcceptInvite() {
         />
         {error && <InlineMessage tone="error">{error}</InlineMessage>}
         <Button type="submit" size="lg" isLoading={isSubmitting} className="mt-2">
-          Crear cuenta de administrador
+          Crear mi cuenta
         </Button>
       </form>
     </AuthCard>

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import * as categoryController from "../controllers/categoryController.js";
-import { authenticate, requireRole } from "../middleware/authenticate.js";
+import { authenticate, requirePermission } from "../middleware/authenticate.js";
 import { validateRequest } from "../middleware/validateRequest.js";
 import {
   createCategorySchema,
@@ -12,7 +12,7 @@ import { mongoIdParamSchema } from "../validators/commonValidators.js";
 
 export const adminCategoryRouter = Router();
 
-adminCategoryRouter.use(authenticate, requireRole("admin"));
+adminCategoryRouter.use(authenticate, requirePermission("catalog:manage"));
 
 adminCategoryRouter.get(
   "/",

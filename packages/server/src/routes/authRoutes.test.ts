@@ -4,6 +4,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi, type Mock } f
 import { createApp } from "../app.js";
 import { AdminInvite } from "../models/AdminInvite.js";
 import { RefreshToken } from "../models/RefreshToken.js";
+import { User } from "../models/User.js";
 import { clearTestDB, closeTestDB, connectTestDB } from "../test/dbTestUtils.js";
 import { generateRawToken, hashToken } from "../utils/hash.js";
 
@@ -231,6 +232,51 @@ describe("POST /api/auth/accept-invite", () => {
     expect(res.status).toBe(201);
     expect(res.body.user.role).toBe("admin");
     expect(res.body.user.email).toBe("nuevo-admin@example.com");
+  });
+
+  async function invite(email: string, role?: "admin" | "seller") {
+    const rawToken = generateRawToken();
+    await AdminInvite.create({
+      email,
+      ...(role && { role }),
+      tokenHash: hashToken(rawToken),
+      invitedBy: new Types.ObjectId(),
+      expiresAt: new Date(Date.now() + 1000 * 60 * 60),
+    });
+    return rawToken;
+  }
+  const accept = (token: string) =>
+    request(app).post("/api/auth/accept-invite").send({ token, password: "adminpassword123", firstName: "A", lastName: "B" });
+
+  it("una invitación de vendedor crea una cuenta de vendedor, no de admin", async () => {
+    const res = await accept(await invite("vendedora@example.com", "seller"));
+    expect(res.status).toBe(201);
+    expect(res.body.user.role).toBe("seller");
+  });
+
+  it("una invitación vieja (sin rol) sigue siendo de admin", async () => {
+    const res = await accept(await invite("vieja@example.com"));
+    expect(res.body.user.role).toBe("admin");
+  });
+
+  it("si el invitado ya tenía cuenta de cliente, pasa a tener el rol de la invitación", async () => {
+    await request(app).post("/api/auth/register").send({ ...credentials, email: "ya-cliente@example.com" });
+    const res = await accept(await invite("ya-cliente@example.com", "seller"));
+    expect(res.status).toBe(201);
+    expect((await User.findOne({ email: "ya-cliente@example.com" }))?.role).toBe("seller");
+  });
+
+  it("una invitación de vendedor no degrada a quien mientras tanto ya es admin", async () => {
+    const token = await invite("ya-admin@example.com", "seller");
+    await User.create({
+      email: "ya-admin@example.com",
+      password: "supersecreto123",
+      firstName: "Ya",
+      lastName: "Admin",
+      role: "admin",
+    });
+    await accept(token);
+    expect((await User.findOne({ email: "ya-admin@example.com" }))?.role).toBe("admin");
   });
 
   it("rechaza una invitación expirada", async () => {
