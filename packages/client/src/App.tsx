@@ -22,6 +22,7 @@ import AdminOrders from "@/pages/admin/AdminOrders";
 import AdminPos from "@/pages/admin/AdminPos";
 import AdminProductForm from "@/pages/admin/AdminProductForm";
 import AdminProducts from "@/pages/admin/AdminProducts";
+import AdminReports from "@/pages/admin/AdminReports";
 import AdminSettings from "@/pages/admin/AdminSettings";
 import AdminShipping from "@/pages/admin/AdminShipping";
 import AdminStoreSaleDetail from "@/pages/admin/AdminStoreSaleDetail";
@@ -72,6 +73,7 @@ export default function App() {
         <Route path="compras/importaciones" element={guard("purchases:manage", <AdminInvoiceImports />)} />
         <Route path="compras/importaciones/:id" element={guard("purchases:manage", <AdminInvoiceImportReview />)} />
         <Route path="proveedores" element={guard("purchases:manage", <AdminSuppliers />)} />
+        <Route path="reportes" element={guard("reports:read", <AdminReports />)} />
         <Route path="ajustes" element={guard("settings:manage", <AdminSettings />)} />
         <Route path="caja" element={guard("cash:operate", <AdminCashRegister />)} />
         <Route path="ventas" element={guard("pos:sell", <AdminPos />)} />

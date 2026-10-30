@@ -130,6 +130,7 @@ export async function createOrderFromCart(
       variantLabel: formatVariantLabel(variant.attributes),
       image: product.images[0]?.url,
       unitPrice: variant.price,
+      unitCost: variant.costPrice,
       quantity: item.quantity,
       subtotal: variant.price * item.quantity,
     });

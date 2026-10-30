@@ -1,5 +1,6 @@
 import type { Permission } from "@caracol/shared";
 import {
+  BarChart3,
   Landmark,
   LayoutDashboard,
   Package,
@@ -21,6 +22,7 @@ import { cn } from "@/lib/utils";
 /** Cada integrante del equipo ve solo lo que su rol le permite usar. */
 const LINKS: { to: string; label: string; icon: typeof Package; end: boolean; permission: Permission }[] = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true, permission: "reports:read" },
+  { to: "/admin/reportes", label: "Reportes", icon: BarChart3, end: false, permission: "reports:read" },
   { to: "/admin/ventas", label: "Punto de venta", icon: ScanBarcode, end: true, permission: "pos:sell" },
   { to: "/admin/caja", label: "Caja", icon: Landmark, end: false, permission: "cash:operate" },
   { to: "/admin/ventas/historial", label: "Ventas del local", icon: Receipt, end: false, permission: "pos:sell" },

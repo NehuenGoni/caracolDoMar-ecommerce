@@ -78,6 +78,7 @@ export async function createStoreSale(
       variantLabel: formatVariantLabel(variant.attributes),
       image: [...product.images].sort((a, b) => a.order - b.order)[0]?.url,
       unitPrice: variant.price,
+      unitCost: variant.costPrice,
       quantity: line.quantity,
       discount,
       subtotal: gross - discount,

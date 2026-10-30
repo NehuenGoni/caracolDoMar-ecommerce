@@ -24,6 +24,7 @@ describe("AdminNav", () => {
   it("el admin ve todo el panel", () => {
     expect(labelsFor("admin")).toEqual([
       "Dashboard",
+      "Reportes",
       "Punto de venta",
       "Caja",
       "Ventas del local",

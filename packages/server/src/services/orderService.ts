@@ -161,6 +161,7 @@ export async function reviewTransferPayment(
       });
     }
     order.paymentStatus = "approved";
+    order.paidAt ??= new Date();
     if (order.status === "pending" || order.status === "cancelled") {
       order.status = "confirmed";
       order.statusHistory.push({

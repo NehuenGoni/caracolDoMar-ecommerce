@@ -1,4 +1,5 @@
 import type { OrderStatus, PaymentStatus } from "@caracol/shared";
+import { hideItemCost } from "../utils/hideItemCost.js";
 import mongoose, { Schema, model, type HydratedDocument, type Model, type Types } from "mongoose";
 
 const ORDER_STATUSES: OrderStatus[] = [
@@ -19,6 +20,12 @@ export interface IOrderItem {
   variantLabel: string;
   image?: string;
   unitPrice: number;
+  /**
+   * Costo de la variante al momento de la venta, para que el margen histórico no cambie cuando
+   * cambia el costo. Dato interno: NUNCA sale por la API (ver el `toJSON` del schema); solo lo lee
+   * el servicio de reportes. Puede faltar en pedidos viejos.
+   */
+  unitCost?: number;
   quantity: number;
   subtotal: number;
 }
@@ -80,6 +87,8 @@ export interface IOrder {
   statusHistory: IOrderStatusHistoryEntry[];
   paymentMethod: string;
   paymentStatus: PaymentStatus;
+  /** Cuándo se cobró (se aprobó el pago). Los reportes cuentan la venta ese día, no el de la compra. */
+  paidAt?: Date;
   /**
    * Claves usadas: `preferenceId`, `initPoint` y `expiresAt` (link de pago
    * vigente) y `paymentId`, `mpStatus`, `mpStatusDetail` (última
@@ -106,6 +115,7 @@ const orderItemSchema = new Schema<IOrderItem>(
     variantLabel: { type: String, default: "" },
     image: { type: String },
     unitPrice: { type: Number, required: true, min: 0 },
+    unitCost: { type: Number, min: 0 },
     quantity: { type: Number, required: true, min: 1 },
     subtotal: { type: Number, required: true, min: 0 },
   },
@@ -180,6 +190,7 @@ const orderSchema = new Schema<IOrder>(
     statusHistory: { type: [statusHistoryEntrySchema], default: [] },
     paymentMethod: { type: String, required: true },
     paymentStatus: { type: String, enum: PAYMENT_STATUSES, default: "pending" },
+    paidAt: { type: Date },
     paymentDetails: { type: Schema.Types.Mixed },
     paymentIssue: { type: paymentIssueSchema },
     shippingMethod: { type: String, required: true },
@@ -189,7 +200,7 @@ const orderSchema = new Schema<IOrder>(
     notes: { type: String },
     receiptUrl: { type: String },
   },
-  { timestamps: true },
+  { timestamps: true, toJSON: { transform: hideItemCost } },
 );
 
 orderSchema.index({ customer: 1, createdAt: -1 });

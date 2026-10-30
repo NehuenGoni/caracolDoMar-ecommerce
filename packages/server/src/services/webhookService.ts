@@ -21,6 +21,7 @@ export async function handlePaymentWebhook(paymentId: string | undefined): Promi
     if (order.paymentStatus === payment.status && order.paymentDetails?.paymentId === payment.id) return; // ya procesado
 
     order.paymentStatus = payment.status;
+    if (payment.status === "approved" && !order.paidAt) order.paidAt = new Date();
     order.paymentDetails = {
       ...order.paymentDetails,
       paymentId: payment.id,

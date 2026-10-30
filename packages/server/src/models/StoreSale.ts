@@ -4,6 +4,7 @@ import type {
   StoreSaleFiscalReceipt,
   StoreSaleStatus,
 } from "@caracol/shared";
+import { hideItemCost } from "../utils/hideItemCost.js";
 import mongoose, { Schema, model, type HydratedDocument, type Model, type Types } from "mongoose";
 
 export interface IStoreSaleItem {
@@ -13,6 +14,8 @@ export interface IStoreSaleItem {
   variantLabel: string;
   image?: string;
   unitPrice: number;
+  /** Costo de la variante al vender. Dato interno: no sale por la API; solo lo leen los reportes. */
+  unitCost?: number;
   quantity: number;
   discount: number;
   subtotal: number;
@@ -73,6 +76,7 @@ const storeSaleItemSchema = new Schema<IStoreSaleItem>(
     variantLabel: { type: String, default: "" },
     image: { type: String },
     unitPrice: { type: Number, required: true, min: 0 },
+    unitCost: { type: Number, min: 0 },
     quantity: { type: Number, required: true, min: 1 },
     discount: { type: Number, required: true, min: 0, default: 0 },
     subtotal: { type: Number, required: true, min: 0 },
@@ -163,7 +167,7 @@ const storeSaleSchema = new Schema<IStoreSale>(
     emailSentTo: { type: [String], default: [] },
     fiscalReceipt: { type: fiscalReceiptSchema },
   },
-  { timestamps: true },
+  { timestamps: true, toJSON: { transform: hideItemCost } },
 );
 
 storeSaleSchema.index({ cashSession: 1, createdAt: -1 });

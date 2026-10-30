@@ -21,6 +21,7 @@ import { inventoryRouter } from "./routes/inventoryRoutes.js";
 import { orderRouter } from "./routes/orderRoutes.js";
 import { productRouter } from "./routes/productRoutes.js";
 import { adminInvoiceImportRouter } from "./routes/adminInvoiceImportRoutes.js";
+import { adminReportRouter } from "./routes/adminReportRoutes.js";
 import { adminSettingsRouter } from "./routes/adminSettingsRoutes.js";
 import { adminShippingRouter } from "./routes/adminShippingRoutes.js";
 import { shippingRouter } from "./routes/shippingRoutes.js";
@@ -69,6 +70,7 @@ export function createApp() {
   app.use("/api/orders", orderRouter);
   app.use("/api/admin/shipping", adminShippingRouter);
   app.use("/api/admin/settings", adminSettingsRouter);
+  app.use("/api/admin/reports", adminReportRouter);
   app.use("/api/admin/suppliers", adminSupplierRouter);
   app.use("/api/admin/invoice-imports", adminInvoiceImportRouter);
   app.use("/api/shipping", shippingRouter);

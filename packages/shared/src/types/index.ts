@@ -13,3 +13,4 @@ export * from "./withdrawal.js";
 export * from "./supplier.js";
 export * from "./settings.js";
 export * from "./supplierInvoiceImport.js";
+export * from "./report.js";

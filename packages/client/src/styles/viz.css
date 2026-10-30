@@ -1,0 +1,59 @@
+/**
+ * Colores de los gráficos de reportes.
+ *
+ * Es la paleta de referencia de la guía de visualización de datos, validada con su script (CVD,
+ * contraste y banda de luminosidad) en claro y en oscuro. NO usa los colores de marca a propósito:
+ * el salvia y el dorado quedan por debajo del mínimo de saturación y se confunden entre sí.
+ *
+ * Todo gráfico lee estas variables y nada más, así que cambiar la paleta (por ejemplo con la
+ * identidad visual nueva) es tocar este archivo. Si se cambian los colores, hay que volver a
+ * validarlos para cada modo contra su superficie.
+ *
+ * El modo oscuro está escrito dos veces, igual que en tokens.css: el @media es el respaldo sin
+ * JavaScript y `:root.dark` es el que aplica ThemeContext.
+ */
+.viz-root {
+  color-scheme: light;
+  --viz-surface: #fcfcfb;
+  --viz-text: #0b0b0b;
+  --viz-text-2: #52514e;
+  --viz-muted: #898781;
+  --viz-grid: #e1e0d9;
+  --viz-axis: #c3c2b7;
+  --viz-border: rgba(11, 11, 11, 0.1);
+  --viz-series-1: #2a78d6;
+  --viz-series-2: #eb6834;
+  --viz-good: #006300;
+  --viz-critical: #d03b3b;
+
+  background-color: var(--viz-surface);
+  color: var(--viz-text);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) .viz-root {
+    color-scheme: dark;
+    --viz-surface: #1a1a19;
+    --viz-text: #f0efec;
+    --viz-text-2: #c3c2b7;
+    --viz-grid: #2c2c2a;
+    --viz-axis: #383835;
+    --viz-border: rgba(255, 255, 255, 0.1);
+    --viz-series-1: #3987e5;
+    --viz-series-2: #d95926;
+    --viz-good: #0ca30c;
+  }
+}
+
+:root.dark .viz-root {
+  color-scheme: dark;
+  --viz-surface: #1a1a19;
+  --viz-text: #f0efec;
+  --viz-text-2: #c3c2b7;
+  --viz-grid: #2c2c2a;
+  --viz-axis: #383835;
+  --viz-border: rgba(255, 255, 255, 0.1);
+  --viz-series-1: #3987e5;
+  --viz-series-2: #d95926;
+  --viz-good: #0ca30c;
+}

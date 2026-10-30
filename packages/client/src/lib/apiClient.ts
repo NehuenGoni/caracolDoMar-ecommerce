@@ -67,10 +67,12 @@ interface ApiFetchOptions extends Omit<RequestInit, "body"> {
   body?: unknown;
   /** Evita el reintento con refresh: usado por login/register/refresh para no entrar en loop. */
   skipAuthRetry?: boolean;
+  /** Cómo leer la respuesta. Por defecto JSON; "blob" es para descargar archivos (CSV de reportes). */
+  responseType?: "json" | "blob";
 }
 
 async function performFetch(path: string, options: ApiFetchOptions): Promise<Response> {
-  const { body, headers, ...rest } = options;
+  const { body, headers, responseType: _responseType, ...rest } = options;
   const isFormData = body instanceof FormData;
 
   return fetch(`${API_BASE}${path}`, {
@@ -108,6 +110,7 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
   }
 
   if (res.status === 204) return undefined as T;
+  if (options.responseType === "blob") return (await res.blob()) as T;
   return (await res.json()) as T;
 }
 
