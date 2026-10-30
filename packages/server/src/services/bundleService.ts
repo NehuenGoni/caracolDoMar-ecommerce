@@ -49,6 +49,35 @@ export function bundleAvailability(
   return Number.isFinite(available) ? available : 0;
 }
 
+/**
+ * Costo de un kit con los costos de HOY de sus componentes. El `costPrice` guardado en la variante
+ * del kit es el del momento en que se armó, y las compras actualizan el costo de los componentes,
+ * no el del kit. `null` si falta algún componente (no se puede calcular).
+ */
+export function bundleCost(bundle: Pick<ProductDocument, "bundleItems">, components: ComponentsById): number | null {
+  if (bundle.bundleItems.length === 0) return null;
+  const costs: number[] = [];
+  for (const item of bundle.bundleItems) {
+    const variant = components.get(item.product.toString())?.variants.find((v) => v.sku === item.variantSku);
+    if (!variant) return null;
+    costs.push(variant.costPrice * item.quantity);
+  }
+  return sumCents(...costs);
+}
+
+/**
+ * El costo que se guarda en la línea de un pedido o venta (`unitCost`, para los márgenes): el de la
+ * variante o, en un kit, la suma de los costos actuales de sus componentes.
+ */
+export function currentUnitCost(
+  product: Pick<ProductDocument, "isBundle" | "bundleItems">,
+  variantCostPrice: number,
+  components: ComponentsById,
+): number {
+  if (!product.isBundle) return variantCostPrice;
+  return bundleCost(product, components) ?? variantCostPrice;
+}
+
 /** Stock que se le muestra y se le permite comprar a un cliente: propio, o derivado si es un kit. */
 export function sellableStock(
   product: Pick<ProductDocument, "isBundle" | "bundleItems">,

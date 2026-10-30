@@ -21,7 +21,7 @@ import type {
   StoreSalesSummaryQuery,
 } from "../validators/storeSaleValidators.js";
 import { computeTotals, requireOpenSession } from "./cashSessionService.js";
-import { loadComponents, sellableStock } from "./bundleService.js";
+import { currentUnitCost, loadComponents, sellableStock } from "./bundleService.js";
 import { restockItems, decrementStock } from "./checkoutService.js";
 import { sendStoreSaleReceiptEmail } from "./email/emailService.js";
 import { recordMovements, returnStock } from "./inventoryService.js";
@@ -78,7 +78,7 @@ export async function createStoreSale(
       variantLabel: formatVariantLabel(variant.attributes),
       image: [...product.images].sort((a, b) => a.order - b.order)[0]?.url,
       unitPrice: variant.price,
-      unitCost: variant.costPrice,
+      unitCost: currentUnitCost(product, variant.costPrice, components),
       quantity: line.quantity,
       discount,
       subtotal: gross - discount,

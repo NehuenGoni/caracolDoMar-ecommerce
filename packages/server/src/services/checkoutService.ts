@@ -2,7 +2,7 @@ import { sumCents, formatVariantLabel } from "@caracol/shared";
 import { Types } from "mongoose";
 import { isMercadoPagoConfigured } from "../config/env.js";
 import { getNextSequence } from "../models/Counter.js";
-import { expandBundleItems } from "./bundleService.js";
+import { currentUnitCost, expandBundleItems, loadComponents } from "./bundleService.js";
 import { Cart } from "../models/Cart.js";
 import { Order, type IOrderItem, type OrderDocument } from "../models/Order.js";
 import { Product } from "../models/Product.js";
@@ -111,6 +111,7 @@ export async function createOrderFromCart(
   const productIds = [...new Set(cart.items.map((i) => i.product.toString()))];
   const products = await Product.find({ _id: { $in: productIds }, isActive: true });
   const productById = new Map(products.map((p) => [p._id.toString(), p]));
+  const components = await loadComponents(products.filter((p) => p.isBundle));
 
   const orderItems: IOrderItem[] = [];
   const stockDecrements: StockDecrement[] = [];
@@ -130,7 +131,7 @@ export async function createOrderFromCart(
       variantLabel: formatVariantLabel(variant.attributes),
       image: product.images[0]?.url,
       unitPrice: variant.price,
-      unitCost: variant.costPrice,
+      unitCost: currentUnitCost(product, variant.costPrice, components),
       quantity: item.quantity,
       subtotal: variant.price * item.quantity,
     });

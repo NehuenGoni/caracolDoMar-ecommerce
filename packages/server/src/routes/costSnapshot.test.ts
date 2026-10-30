@@ -182,3 +182,35 @@ describe("cuándo se cobró un pedido (paidAt)", () => {
     expect(body.paymentMethods).toEqual([{ channel: "online", method: "transfer", count: 1, revenue: 20000 }]);
   });
 });
+
+describe("el costo de un kit sale de sus componentes al momento de vender", () => {
+  it("si una compra cambió el costo de un componente, la venta del kit guarda el costo nuevo", async () => {
+    const { auth } = await actor("admin");
+    const vela = await product(1000);
+    const sahumerio = await product(500);
+    const kit = await Product.create({
+      name: "Kit ritual",
+      category: vela.category,
+      isBundle: true,
+      bundleItems: [
+        { product: vela._id, variantSku: vela.variants[0]!.sku, quantity: 2 },
+        { product: sahumerio._id, variantSku: sahumerio.variants[0]!.sku, quantity: 1 },
+      ],
+      // El costo con el que se armó el kit: 2 × 1000 + 500.
+      variants: [{ sku: "KIT-RITUAL", attributes: [], price: 9000, costPrice: 2500, stock: 0, lowStockThreshold: 0 }],
+    });
+
+    // Después sube el costo de la vela (como lo haría una compra).
+    await Product.updateOne({ _id: vela._id, "variants.sku": vela.variants[0]!.sku }, { $set: { "variants.$.costPrice": 1600 } });
+
+    await request(app).post("/api/admin/cash-sessions").set(auth).send({ openingAmount: 0 }).expect(201);
+    await request(app)
+      .post("/api/admin/store-sales")
+      .set(auth)
+      .send({ items: [{ productId: kit._id.toString(), variantSku: "KIT-RITUAL", quantity: 1 }], paymentMethod: "debit" })
+      .expect(201);
+
+    // 2 × 1600 + 500, no los 2500 guardados en el kit.
+    expect(await costOf("sale")).toBe(3700);
+  });
+});
