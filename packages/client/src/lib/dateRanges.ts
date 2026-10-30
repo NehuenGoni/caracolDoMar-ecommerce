@@ -69,6 +69,20 @@ export function matchPreset(range: DateRange, today: string = todayKey()): Range
 }
 
 /**
+ * Los mismos días, pero del mes anterior (el 1 al 12 de octubre → el 1 al 12 de septiembre). Es la
+ * comparación natural para el mes en curso. El período tiene que estar dentro de un solo mes; los
+ * días que el mes anterior no tiene (31 de marzo → febrero) se recortan a su último día.
+ */
+export function sameDaysLastMonth(range: DateRange): DateRange {
+  const lastOfPrevious = addDays(`${range.from.slice(0, 8)}01`, -1);
+  const clamp = (key: string) => {
+    const day = `${lastOfPrevious.slice(0, 8)}${key.slice(8)}`;
+    return day > lastOfPrevious ? lastOfPrevious : day;
+  };
+  return { from: clamp(range.from), to: clamp(range.to) };
+}
+
+/**
  * El período anterior de la misma duración, justo antes (para decir "vs el período anterior").
  * Un mes calendario completo se compara con el mes anterior completo, no con los N días previos.
  */

@@ -10,6 +10,8 @@ interface ReportStatProps {
   hero?: boolean;
   /** Variación contra el período anterior, en %. `undefined` oculta la línea; `null` explica que no hay con qué comparar. */
   delta?: number | null;
+  /** Contra qué se compara la variación. */
+  deltaLabel?: string;
   /** Si subir es bueno (ventas, ganancia) o malo (costos). */
   upIsGood?: boolean;
   /** Texto de apoyo debajo ("Margen 60,2%"). */
@@ -20,7 +22,15 @@ interface ReportStatProps {
  * El número ES el gráfico: una ficha con la cifra, su variación y una línea de contexto. Cifras
  * proporcionales (no tabulares): un número suelto y grande se ve flojo con dígitos de ancho fijo.
  */
-export function ReportStat({ label, value, hero, delta, upIsGood = true, hint }: ReportStatProps) {
+export function ReportStat({
+  label,
+  value,
+  hero,
+  delta,
+  deltaLabel = "vs. el período anterior",
+  upIsGood = true,
+  hint,
+}: ReportStatProps) {
   const good = delta !== undefined && delta !== null && (delta === 0 || delta > 0 === upIsGood);
 
   return (
@@ -38,7 +48,7 @@ export function ReportStat({ label, value, hero, delta, upIsGood = true, hint }:
                 {delta > 0 ? "▲" : delta < 0 ? "▼" : "■"} {delta > 0 ? "+" : ""}
                 {delta.toLocaleString("es-AR")}%
               </span>{" "}
-              vs. el período anterior
+              {deltaLabel}
             </>
           )}
         </p>

@@ -77,4 +77,7 @@ Ecommerce/Gran Grow. Idioma de la UI y de los comentarios: español rioplatense.
   transferencia bancaria, importación de facturas con IA). Las transacciones cubren compras e importación;
   el checkout y el POS siguen con compensación manual (funciona y está testeada).
 - Fase 4: hecha (roles admin y vendedor, permisos por ruta, equipo con invitaciones por rol).
-- Fases 5–7: reportes, SEO, identidad visual.
+- Fase 5: hecha (reportes de ventas, margen, más vendidos, stock valorizado y sin movimiento, CSV; dashboard
+  con el mes en curso). Solo admin (`reports:read`). Los ítems de pedidos y ventas guardan `unitCost` al
+  venderse: el margen histórico no cambia si después cambia el costo. Gráficos en SVG propio, sin librería.
+- Fases 6–7: SEO, identidad visual.

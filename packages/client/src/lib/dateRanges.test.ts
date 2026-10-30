@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { addDays, daysInRange, matchPreset, presetRange, previousRange, todayKey } from "./dateRanges";
+import {
+  addDays,
+  daysInRange,
+  matchPreset,
+  presetRange,
+  previousRange,
+  sameDaysLastMonth,
+  todayKey,
+} from "./dateRanges";
 
 describe("todayKey", () => {
   it("es el día de Argentina, no el de UTC", () => {
@@ -69,5 +77,20 @@ describe("previousRange", () => {
   it("un mes todavía en curso se compara con los mismos días del anterior (no con otro largo)", () => {
     // 1 al 29 de octubre (29 días) vs los 29 días anteriores
     expect(previousRange({ from: "2026-10-01", to: "2026-10-29" })).toEqual({ from: "2026-09-02", to: "2026-09-30" });
+  });
+});
+
+describe("sameDaysLastMonth", () => {
+  it("compara el mes en curso con los mismos días del mes anterior", () => {
+    expect(sameDaysLastMonth({ from: "2026-10-01", to: "2026-10-12" })).toEqual({ from: "2026-09-01", to: "2026-09-12" });
+  });
+
+  it("cruza el año en enero", () => {
+    expect(sameDaysLastMonth({ from: "2027-01-01", to: "2027-01-05" })).toEqual({ from: "2026-12-01", to: "2026-12-05" });
+  });
+
+  it("recorta los días que el mes anterior no tiene", () => {
+    expect(sameDaysLastMonth({ from: "2026-03-01", to: "2026-03-30" })).toEqual({ from: "2026-02-01", to: "2026-02-28" });
+    expect(sameDaysLastMonth({ from: "2026-10-31", to: "2026-10-31" })).toEqual({ from: "2026-09-30", to: "2026-09-30" });
   });
 });
