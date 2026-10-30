@@ -1,3 +1,4 @@
+import { catalogSeo } from "@caracol/shared";
 import { useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { CategoryFilter } from "@/components/catalog/CategoryFilter";
@@ -9,13 +10,14 @@ import { Spinner } from "@/components/ui/Spinner";
 import { useCategories } from "@/hooks/useCategories";
 import { useCatalogFacets } from "@/hooks/useCatalogFacets";
 import { useProducts } from "@/hooks/useProducts";
+import { siteUrl, useSeo } from "@/hooks/useSeo";
 import { filtersFromParams, filtersToApi, filtersToParams } from "@/lib/catalogFilters";
 
 const PAGE_SIZE = 12;
 
 export default function Catalog() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { categories } = useCategories();
+  const { categories, isLoading: loadingCategories } = useCategories();
   const facets = useCatalogFacets();
 
   const categorySlug = searchParams.get("categoria") ?? undefined;
@@ -28,6 +30,9 @@ export default function Catalog() {
     () => categories.find((c) => c.slug === categorySlug),
     [categories, categorySlug],
   );
+
+  // Con una categoría en la URL, esperamos a conocerla para no anunciar "Catálogo" y después cambiar.
+  useSeo(categorySlug && loadingCategories ? null : catalogSeo(siteUrl(), activeCategory));
 
   const { data, isLoading } = useProducts({
     page,

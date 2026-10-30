@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, ImageOff, Play, ShoppingBag } from "lucide-react";
 import { useMemo, useState } from "react";
-import { formatVariantLabel } from "@caracol/shared";
+import { formatVariantLabel, productSeo } from "@caracol/shared";
 import { useParams } from "react-router-dom";
 import { InlineMessage } from "@/components/ui/InlineMessage";
 import { PriceTag } from "@/components/ui/PriceTag";
@@ -9,7 +9,9 @@ import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { Spinner } from "@/components/ui/Spinner";
 import { Button } from "@/components/ui/Button";
 import { useCart } from "@/contexts/CartContext";
+import { useCategories } from "@/hooks/useCategories";
 import { useProduct } from "@/hooks/useProduct";
+import { siteUrl, useSeo } from "@/hooks/useSeo";
 import { buildGallery } from "@/lib/media";
 import { attributeOptions, isValueAvailable, pickVariant } from "@/lib/variantSelection";
 import NotFound from "./NotFound";
@@ -18,6 +20,9 @@ export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
   const { product, isLoading, error } = useProduct(slug);
   const { addItem } = useCart();
+  const { categories } = useCategories();
+  const category = product ? categories.find((c) => c._id === product.category) : undefined;
+  useSeo(product ? productSeo(siteUrl(), product, category) : null);
 
   const [selectedSku, setSelectedSku] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);

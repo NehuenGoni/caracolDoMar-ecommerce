@@ -157,6 +157,12 @@ export async function listPublicProducts(
   return { ...result, items: await serializeProducts(result.items, viewerIsAdmin) };
 }
 
+/** Lo que entra en el sitemap: lo mismo que ve un visitante en el listado (sin las piezas únicas vendidas). */
+export async function listSitemapProducts(): Promise<{ slug: string; updatedAt: Date }[]> {
+  const filter = await buildFilter({ page: 1, limit: 1 }, { includeInactive: false, hideSoldOutUniquePieces: true });
+  return Product.find(filter, { slug: 1, updatedAt: 1 }).sort({ updatedAt: -1 }).lean<{ slug: string; updatedAt: Date }[]>();
+}
+
 export async function getPublicProductBySlug(
   slug: string,
   viewerIsAdmin: boolean,

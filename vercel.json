@@ -2,5 +2,9 @@
   "buildCommand": "npm run build:client",
   "installCommand": "npm ci",
   "outputDirectory": "packages/client/dist",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    { "source": "/sitemap.xml", "destination": "https://caracol-server.fly.dev/api/seo/sitemap.xml" },
+    { "source": "/robots.txt", "destination": "https://caracol-server.fly.dev/api/seo/robots.txt" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }

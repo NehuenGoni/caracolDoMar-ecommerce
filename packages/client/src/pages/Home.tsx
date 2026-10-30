@@ -1,4 +1,4 @@
-import { BUSINESS } from "@caracol/shared";
+import { BUSINESS, homeSeo } from "@caracol/shared";
 import { motion } from "framer-motion";
 import { ArrowRight, Clock, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -8,10 +8,12 @@ import { Spinner } from "@/components/ui/Spinner";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 import { useCategories } from "@/hooks/useCategories";
 import { useProducts } from "@/hooks/useProducts";
+import { siteUrl, useSeo } from "@/hooks/useSeo";
 
 export default function Home() {
   const { data, isLoading } = useProducts({ isFeatured: true, limit: 8 });
   const { categories } = useCategories();
+  useSeo(homeSeo(siteUrl()));
 
   return (
     <div className="flex flex-col gap-16">

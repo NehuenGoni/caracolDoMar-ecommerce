@@ -24,6 +24,7 @@ import { adminInvoiceImportRouter } from "./routes/adminInvoiceImportRoutes.js";
 import { adminReportRouter } from "./routes/adminReportRoutes.js";
 import { adminSettingsRouter } from "./routes/adminSettingsRoutes.js";
 import { adminShippingRouter } from "./routes/adminShippingRoutes.js";
+import { seoRouter } from "./routes/seoRoutes.js";
 import { shippingRouter } from "./routes/shippingRoutes.js";
 import { adminSupplierRouter } from "./routes/adminSupplierRoutes.js";
 import { supplierPurchaseRouter } from "./routes/supplierPurchaseRoutes.js";
@@ -61,6 +62,7 @@ export function createApp() {
   app.use("/api/categories", categoryRouter);
   app.use("/api/admin/products", adminProductRouter);
   app.use("/api/products", productRouter);
+  app.use("/api/seo", seoRouter);
   app.use("/api/uploads", uploadRouter);
   app.use("/api/cart", cartRouter);
   app.use("/api/checkout", checkoutRouter);

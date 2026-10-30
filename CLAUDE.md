@@ -80,4 +80,8 @@ Ecommerce/Gran Grow. Idioma de la UI y de los comentarios: español rioplatense.
 - Fase 5: hecha (reportes de ventas, margen, más vendidos, stock valorizado y sin movimiento, CSV; dashboard
   con el mes en curso). Solo admin (`reports:read`). Los ítems de pedidos y ventas guardan `unitCost` al
   venderse: el margen histórico no cambia si después cambia el costo. Gráficos en SVG propio, sin librería.
-- Fases 6–7: SEO, identidad visual.
+- Fase 6: hecha (SEO). Título, meta, Open Graph y JSON-LD salen de `shared/src/utils/seo.ts`, que usan
+  tanto `useSeo` (cliente) como `seoService` (server): una página pública nueva se agrega en los dos.
+  `middleware.ts` (raíz, Vercel) les da a los bots el HTML de `GET /api/seo/render`; `sitemap.xml` y
+  `robots.txt` se reescriben al server en `vercel.json` (URL de Fly fija ahí).
+- Fase 7: identidad visual.

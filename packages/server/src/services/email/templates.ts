@@ -1,6 +1,7 @@
 import type { OrderStatus, StaffRole } from "@caracol/shared";
 import { ROLE_LABELS, formatMoney } from "@caracol/shared";
 import { env } from "../../config/env.js";
+import { escapeHtml } from "../../utils/html.js";
 
 interface EmailTemplate {
   subject: string;
@@ -182,14 +183,6 @@ export function orderStatusChangeTemplate(
       `<p style="color:${BRAND.textMuted};">El estado de tu pedido <strong>#${order.orderNumber}</strong> cambió a: <strong>${label}</strong>.</p>`,
     ),
   };
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 }
 
 export interface StoreSaleReceiptData {
