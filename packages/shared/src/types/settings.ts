@@ -36,7 +36,24 @@ export interface TransferInstructions {
   paymentStatus: "pending" | "approved" | "rejected" | "refunded" | "cancelled";
 }
 
+/**
+ * Barra de avisos arriba de la tienda ("Jueves feriado: el local abre de 10 a 14 h"). Editable desde
+ * Ajustes; se apaga sola después de `until`.
+ */
+export interface AnnouncementSettings {
+  enabled: boolean;
+  text: string;
+  /** Último día que se muestra (`YYYY-MM-DD`, día de Argentina, incluido). `null`: hasta que se apague. */
+  until: string | null;
+}
+
+/** Lo que recibe la tienda: el aviso vigente, o `null` si no hay ninguno. */
+export interface PublicAnnouncement {
+  text: string;
+}
+
 export interface StoreSettings {
   pricing: PricingSettings;
   transfer: TransferSettings;
+  announcement: AnnouncementSettings;
 }

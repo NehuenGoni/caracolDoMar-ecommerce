@@ -67,7 +67,8 @@ Ecommerce/Gran Grow. Idioma de la UI y de los comentarios: español rioplatense.
 ## Pendiente (ver plan por fases)
 
 - Fase 0: scaffold desde Amanda — hecha. Datos del negocio en `shared/src/constants/business.ts`
-  siguen en `COMPLETAR`; `packages/client/public/` todavía tiene logo y fotos de Amanda.
+  siguen en `COMPLETAR`; `packages/client/public/` todavía tiene logo y fotos de Amanda: ya no se usan en la UI (ver Fase 7),
+  salvo `logo.png` como imagen de respaldo para compartir (SEO). Reemplazarlas por las de Caracol.
 - Fase 1: hecha. El costo (`costPrice`) solo sale por
   `serializeProducts` (`productService`) para no-admins; `updateProduct` no toca el stock de variantes
   existentes; `deleteProduct` es baja lógica; los comprobantes solo se aceptan del Cloudinary propio.
@@ -84,4 +85,8 @@ Ecommerce/Gran Grow. Idioma de la UI y de los comentarios: español rioplatense.
   tanto `useSeo` (cliente) como `seoService` (server): una página pública nueva se agrega en los dos.
   `middleware.ts` (raíz, Vercel) les da a los bots el HTML de `GET /api/seo/render`; `sitemap.xml` y
   `robots.txt` se reescriben al server en `vercel.json` (URL de Fly fija ahí).
-- Fase 7: identidad visual.
+- Fase 7: hecha (identidad visual). Paleta en `client/src/styles/tokens.css` (contraste AA medido; los
+  colores fijos `madera-oscura`, `crema`, `dorado-viejo`… son para textos sobre fotos). Cormorant Garamond
+  + Nunito Sans; `.font-affirmation` para frases. Fotos y textos de la Home en `client/src/lib/storeContent.ts`
+  (`null` = fondo cálido de `WarmPhoto`). Datos del local en `BUSINESS`: lo que dice "COMPLETAR" no se
+  muestra (`isBusinessFieldSet`). Aviso de la tienda: `StoreSettings.announcement`, se edita en Ajustes.

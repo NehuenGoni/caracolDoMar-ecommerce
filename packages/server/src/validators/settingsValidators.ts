@@ -30,6 +30,23 @@ export const updateTransferSettingsSchema = z
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["cbu"], message: "Cargá el CBU/CVU o el alias" });
     }
   });
+export const updateAnnouncementSettingsSchema = z
+  .object({
+    enabled: z.boolean(),
+    text: z.string().trim().max(160, "El aviso puede tener hasta 160 caracteres").default(""),
+    until: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida")
+      .nullable()
+      .default(null),
+  })
+  .superRefine((data, ctx) => {
+    if (data.enabled && !data.text) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["text"], message: "Escribí el aviso" });
+    }
+  });
+export type UpdateAnnouncementSettingsInput = z.infer<typeof updateAnnouncementSettingsSchema>;
+
 export type UpdateTransferSettingsInput = z.infer<typeof updateTransferSettingsSchema>;
 
 export type UpdatePricingSettingsInput = z.infer<typeof updatePricingSettingsSchema>;

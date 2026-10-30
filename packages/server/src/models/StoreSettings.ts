@@ -17,6 +17,12 @@ export interface IStoreSettings {
     taxId: string;
     instructions: string;
   };
+  announcement?: {
+    enabled: boolean;
+    text: string;
+    /** Día de Argentina (`YYYY-MM-DD`), incluido. */
+    until: string | null;
+  };
 }
 
 const storeSettingsSchema = new Schema<IStoreSettings>(
@@ -35,6 +41,11 @@ const storeSettingsSchema = new Schema<IStoreSettings>(
       alias: { type: String, default: "", trim: true },
       taxId: { type: String, default: "", trim: true },
       instructions: { type: String, default: "", trim: true },
+    },
+    announcement: {
+      enabled: { type: Boolean, default: false },
+      text: { type: String, default: "", trim: true },
+      until: { type: String, default: null },
     },
   },
   { timestamps: true },

@@ -22,7 +22,7 @@ export function AdminLayout() {
         <header className="sticky top-0 z-40 border-b border-border bg-surface">
           <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
             <Link to="/admin" aria-label="Caracol do Mar">
-              <Logo className="h-8 w-auto" />
+              <Logo size="sm" />
             </Link>
             <div className="flex items-center gap-3">
               <span className="hidden text-sm text-text-muted sm:inline">{user?.email}</span>

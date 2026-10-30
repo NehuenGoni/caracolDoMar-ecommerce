@@ -1,5 +1,12 @@
-import { formatMoney, suggestedPrice, type PricingSettings, type TransferSettings } from "@caracol/shared";
+import {
+  formatMoney,
+  suggestedPrice,
+  type AnnouncementSettings,
+  type PricingSettings,
+  type TransferSettings,
+} from "@caracol/shared";
 import { useEffect, useState } from "react";
+import { AnnouncementSettingsCard } from "@/components/admin/AnnouncementSettingsCard";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -28,6 +35,7 @@ function SaveFeedback({ state }: { state: SaveState }) {
 export default function AdminSettings() {
   const [pricing, setPricing] = useState<PricingSettings | null>(null);
   const [transfer, setTransfer] = useState<TransferSettings | null>(null);
+  const [announcement, setAnnouncement] = useState<AnnouncementSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [pricingSave, setPricingSave] = useState<SaveState>(IDLE);
@@ -38,13 +46,14 @@ export default function AdminSettings() {
       .then(({ settings }) => {
         setPricing(settings.pricing);
         setTransfer(settings.transfer);
+        setAnnouncement(settings.announcement);
       })
       .catch((err) => setLoadError(err instanceof ApiError ? err.message : "No pudimos cargar la configuración"))
       .finally(() => setIsLoading(false));
   }, []);
 
   if (isLoading) return <Spinner label="Cargando configuración…" />;
-  if (!pricing || !transfer) {
+  if (!pricing || !transfer || !announcement) {
     return <InlineMessage tone="error">{loadError ?? "No pudimos cargar la configuración."}</InlineMessage>;
   }
 
@@ -93,6 +102,8 @@ export default function AdminSettings() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="font-display text-2xl text-text">Ajustes</h1>
+
+      <AnnouncementSettingsCard initial={announcement} />
 
       <Card className="flex flex-col gap-4">
         <div>

@@ -32,7 +32,7 @@ export function Header() {
     <header className="sticky top-0 z-40 border-b border-border bg-bg/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link to="/" aria-label="Caracol do Mar">
-          <Logo className="h-12 w-auto" />
+          <Logo size="lg" />
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">

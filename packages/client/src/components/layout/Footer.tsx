@@ -1,4 +1,4 @@
-import { BUSINESS } from "@caracol/shared";
+import { BUSINESS, isBusinessFieldSet } from "@caracol/shared";
 import { Instagram } from "lucide-react";
 import { Link } from "react-router-dom";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
@@ -9,31 +9,33 @@ export function Footer() {
     <footer className="border-t border-border bg-surface">
       <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-6 sm:px-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
-          <Logo className="h-10 w-auto shrink-0" />
+          <Logo size="md" className="shrink-0" />
           <div className="flex flex-col gap-1.5">
             <p className="max-w-[16rem] text-xs leading-relaxed text-text-muted">
-              Textiles, cerámica y objetos que hacen de tu casa un lugar propio.
+              {BUSINESS.tagline}
             </p>
             <div className="flex items-center gap-3 text-text-muted">
               <a
                 href={BUSINESS.instagramUrl}
                 target="_blank"
                 rel="noreferrer"
-                aria-label="Instagram de Caracol do Mar"
-                className="inline-flex transition-colors hover:text-accent-deep"
-              >
-                <Instagram className="size-4" />
-              </a>
-              <a
-                href={BUSINESS.whatsappUrl}
-                target="_blank"
-                rel="noreferrer"
-                aria-label="WhatsApp de Caracol do Mar"
                 className="inline-flex items-center gap-1.5 text-xs transition-colors hover:text-accent-deep"
               >
-                <WhatsAppIcon className="size-4" />
-                {BUSINESS.phone}
+                <Instagram className="size-4" />
+                {BUSINESS.instagramHandle}
               </a>
+              {isBusinessFieldSet(BUSINESS.whatsappNumber) && (
+                <a
+                  href={BUSINESS.whatsappUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="WhatsApp de Caracol do Mar"
+                  className="inline-flex items-center gap-1.5 text-xs transition-colors hover:text-accent-deep"
+                >
+                  <WhatsAppIcon className="size-4" />
+                  {BUSINESS.phone}
+                </a>
+              )}
             </div>
           </div>
         </div>
@@ -85,7 +87,7 @@ export function Footer() {
         </div>
       </div>
       <div className="border-t border-border px-4 py-3 text-center text-[11px] text-text-muted sm:px-6">
-        © {new Date().getFullYear()} Caracol do Mar — Buenos Aires, Argentina
+        © {new Date().getFullYear()} {BUSINESS.name} — {BUSINESS.city}
       </div>
     </footer>
   );

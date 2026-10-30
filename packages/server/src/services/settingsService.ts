@@ -1,7 +1,9 @@
-import type { PricingSettings, TransferSettings } from "@caracol/shared";
+import type { AnnouncementSettings, PricingSettings, PublicAnnouncement, TransferSettings } from "@caracol/shared";
 import { env } from "../config/env.js";
 import { StoreSettings } from "../models/StoreSettings.js";
+import { dayKey } from "../utils/reportDates.js";
 import type {
+  UpdateAnnouncementSettingsInput,
   UpdatePricingSettingsInput,
   UpdateTransferSettingsInput,
 } from "../validators/settingsValidators.js";
@@ -60,4 +62,29 @@ export async function updateTransferSettings(input: UpdateTransferSettingsInput)
     { upsert: true, setDefaultsOnInsert: true },
   );
   return getTransferSettings();
+}
+
+const ANNOUNCEMENT_DEFAULTS: AnnouncementSettings = { enabled: false, text: "", until: null };
+
+export async function getAnnouncementSettings(): Promise<AnnouncementSettings> {
+  const doc = await StoreSettings.findOne({ key: "default" }).lean();
+  const saved = doc?.announcement;
+  return saved ? { enabled: saved.enabled, text: saved.text, until: saved.until ?? null } : ANNOUNCEMENT_DEFAULTS;
+}
+
+export async function updateAnnouncementSettings(input: UpdateAnnouncementSettingsInput): Promise<AnnouncementSettings> {
+  await StoreSettings.findOneAndUpdate(
+    { key: "default" },
+    { $set: { announcement: input } },
+    { upsert: true, setDefaultsOnInsert: true },
+  );
+  return getAnnouncementSettings();
+}
+
+/** El aviso que se muestra en la tienda: prendido, con texto y sin vencer (el día `until` todavía va). */
+export async function getPublicAnnouncement(now: Date = new Date()): Promise<PublicAnnouncement | null> {
+  const { enabled, text, until } = await getAnnouncementSettings();
+  if (!enabled || !text) return null;
+  if (until && until < dayKey(now)) return null;
+  return { text };
 }

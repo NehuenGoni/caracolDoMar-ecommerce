@@ -40,7 +40,7 @@ describe("App", () => {
 
     expect(screen.getByRole("banner")).toBeInTheDocument();
     expect(await screen.findByRole("heading", { level: 1 })).toHaveTextContent(
-      "Objetos con carácter para tu casa",
+      "Rituales, aromas y energía para tu hogar",
     );
   });
 
@@ -78,7 +78,7 @@ describe("App", () => {
     renderApp();
 
     expect(await screen.findByRole("heading", { level: 1 })).toHaveTextContent(
-      "Objetos con carácter para tu casa",
+      "Rituales, aromas y energía para tu hogar",
     );
     window.history.pushState({}, "", "/");
   });

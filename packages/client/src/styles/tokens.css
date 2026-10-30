@@ -1,87 +1,97 @@
 /**
- * Paleta de marca Caracol do Mar.
- * Colores de identidad fijos + tokens de interfaz (claro/oscuro) tal como
- * fueron validados — no reinterpretar los valores.
+ * Paleta de Caracol do Mar: cálida y terrosa, como el local y el feed de Instagram — madera, crema,
+ * terracota y dorado viejo, con salvia y turquesa de las plantas y los cristales.
+ *
+ * Contraste verificado (WCAG AA, 4.5:1 para texto) de cada color de texto sobre --bg, --surface y
+ * --surface-alt, en claro y en oscuro. Si se retoca un valor, volver a medirlo.
  */
 
 :root {
-  /* Colores de identidad fijos */
-  --color-negro-amanda: #211e1a;
-  --color-dorado-amanda: #c69a3b;
-  --color-crema-lino: #f5f0e4;
-  --color-verde-salvia: #8a9678;
-  --color-terracota: #b75e37;
-  --color-madera-natural: #cba379;
-
-  /* Tokens de interfaz — modo claro (por defecto).
-     El lienzo (--bg) es un arena más profundo que --color-crema-lino, y las
-     tarjetas (--surface) retoman el crema-lino directamente: así el crema
-     queda visible en toda la interfaz en vez de disolverse hacia blanco. */
-  --bg: #f0e4cc;
-  --surface: #f5f0e4;
-  --surface-alt: #e9dcbd;
-  --border: #d9c7a0;
-  --text: #211e1a;
-  --text-muted: #6b6252;
-  --primary: #211e1a;
-  --primary-strong: #3a352c;
-  --on-primary: #c69a3b;
-  --accent: #c69a3b;
-  --accent-deep: #a57a22;
-  --accent2: #b75e37;
-  --accent2-deep: #954a2a;
-  --support: #7c8969;
-  --on-accent2: #f5f0e4;
+  /* Tokens de interfaz — modo claro (por defecto). */
+  --bg: #f4ecdf;
+  --surface: #fbf6ee;
+  --surface-alt: #efe3d0;
+  --border: #dccab0;
+  --text: #2f2219;
+  --text-muted: #6f5b49;
+  /* Nogal: botones y acciones principales. */
+  --primary: #5c3b26;
+  --primary-strong: #462c1b;
+  --on-primary: #fbf6ee;
+  /* Dorado viejo: detalles; -deep es la versión apta para texto. */
+  --accent: #b08a3e;
+  --accent-deep: #745820;
+  /* Terracota: avisos y lo que pide atención. */
+  --accent2: #a8552f;
+  --accent2-deep: #8f4527;
+  --on-accent2: #fbf6ee;
+  /* Salvia: lo que salió bien. */
+  --support: #546850;
+  /* Turquesa: acentos chicos (frases, Instagram). */
+  --accent3: #2f6f6b;
 
   color-scheme: light;
 }
 
 /*
- * Los valores oscuros están escritos dos veces a propósito:
+ * Modo oscuro en maderas oscuras. Los valores están escritos dos veces a propósito:
  * - @media (prefers-color-scheme: dark) es el respaldo cuando no corrió JavaScript (sin flash de tema).
  * - :root.dark es la clase explícita que aplica ThemeContext (contexts/ThemeContext.tsx) y manda cuando está presente.
  * Si se retocan valores, hay que tocar los dos bloques.
  */
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
-    --bg: #1b1912;
-    --surface: #242019;
-    --surface-alt: #2e2a1e;
-    --border: #423c2b;
-    --text: #f2ebda;
-    --text-muted: #b7ad93;
-    --primary: #e0b24f;
-    --primary-strong: #f0c878;
-    --on-primary: #1b1912;
-    --accent: #e0b24f;
-    --accent-deep: #f0c878;
-    --accent2: #d07a4c;
-    --accent2-deep: #e2956a;
-    --support: #a3b18a;
-    --on-accent2: #1b1912;
+    --bg: #1d1510;
+    --surface: #271c15;
+    --surface-alt: #33251b;
+    --border: #4b3828;
+    --text: #f3e8d8;
+    --text-muted: #c0a98f;
+    --primary: #e3a676;
+    --primary-strong: #efbb92;
+    --on-primary: #1d1510;
+    --accent: #d6b066;
+    --accent-deep: #e8c88a;
+    --accent2: #e0875d;
+    --accent2-deep: #eda17c;
+    --on-accent2: #1d1510;
+    --support: #a9bb93;
+    --accent3: #8fd3cb;
 
     color-scheme: dark;
   }
 }
 
 :root.dark {
-  --bg: #1b1912;
-  --surface: #242019;
-  --surface-alt: #2e2a1e;
-  --border: #423c2b;
-  --text: #f2ebda;
-  --text-muted: #b7ad93;
-  --primary: #e0b24f;
-  --primary-strong: #f0c878;
-  --on-primary: #1b1912;
-  --accent: #e0b24f;
-  --accent-deep: #f0c878;
-  --accent2: #d07a4c;
-  --accent2-deep: #e2956a;
-  --support: #a3b18a;
-  --on-accent2: #1b1912;
+  --bg: #1d1510;
+  --surface: #271c15;
+  --surface-alt: #33251b;
+  --border: #4b3828;
+  --text: #f3e8d8;
+  --text-muted: #c0a98f;
+  --primary: #e3a676;
+  --primary-strong: #efbb92;
+  --on-primary: #1d1510;
+  --accent: #d6b066;
+  --accent-deep: #e8c88a;
+  --accent2: #e0875d;
+  --accent2-deep: #eda17c;
+  --on-accent2: #1d1510;
+  --support: #a9bb93;
+  --accent3: #8fd3cb;
 
   color-scheme: dark;
+}
+
+/* Colores de identidad fijos (no cambian con el tema): velos sobre fotos, textos sobre fotos. */
+@theme {
+  --color-madera-oscura: #2a1c13;
+  --color-madera: #8b5e3c;
+  --color-crema: #fbf6ee;
+  --color-terracota: #b5603a;
+  --color-dorado-viejo: #c39a4e;
+  --color-salvia: #8a9a7b;
+  --color-turquesa: #4a9a94;
 }
 
 @theme inline {
@@ -100,6 +110,7 @@
   --color-accent2-deep: var(--accent2-deep);
   --color-on-accent2: var(--on-accent2);
   --color-support: var(--support);
+  --color-accent3: var(--accent3);
   --font-display: var(--font-display);
   --font-body: var(--font-body);
 }

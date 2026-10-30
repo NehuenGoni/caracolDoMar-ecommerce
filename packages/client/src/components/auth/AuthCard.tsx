@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
+import { WarmPhoto } from "@/components/ui/WarmPhoto";
+import { STORE_CONTENT } from "@/lib/storeContent";
 
 export function AuthCard({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
   return (
@@ -11,14 +13,16 @@ export function AuthCard({ title, subtitle, children }: { title: string; subtitl
         className="grid overflow-hidden rounded-3xl border border-border bg-surface md:grid-cols-2"
       >
         <div className="relative hidden md:block">
-          <img
-            src="/local-mostrador.jpeg"
+          <WarmPhoto
+            src={STORE_CONTENT.storePhoto}
             alt="Local de Caracol do Mar"
-            className="absolute inset-0 size-full object-cover object-[20%_center]"
+            position="20% center"
+            loading="eager"
+            className="absolute inset-0 size-full"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#211e1a]/60 to-transparent" />
-          <p className="absolute bottom-6 left-6 right-6 font-display text-xl italic text-[#f5f0e4]">
-            Te esperamos también en el local.
+          <div className="absolute inset-0 bg-gradient-to-t from-madera-oscura/70 to-transparent" />
+          <p className="absolute bottom-6 left-6 right-6 font-affirmation text-2xl text-crema">
+            {STORE_CONTENT.affirmations[0]}
           </p>
         </div>
         <div className="p-8 sm:p-10">

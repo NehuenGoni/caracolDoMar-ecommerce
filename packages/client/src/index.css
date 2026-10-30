@@ -1,11 +1,11 @@
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Work+Sans:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&display=swap");
 @import "tailwindcss";
 @import "./styles/tokens.css";
 @import "./styles/viz.css";
 
 :root {
-  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
-  --font-body: "Work Sans", system-ui, -apple-system, sans-serif;
+  --font-display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --font-body: "Nunito Sans", system-ui, -apple-system, sans-serif;
 }
 
 body {
@@ -15,8 +15,10 @@ body {
   transition: background-color 200ms ease, color 200ms ease;
 }
 
+/* Cormorant tiene trazos finos: los títulos van en 600 para que se lean bien también en chico. */
 h1, h2, h3, h4, .font-display {
   font-family: var(--font-display);
+  font-weight: 600;
 }
 
 * {
@@ -24,10 +26,8 @@ h1, h2, h3, h4, .font-display {
 }
 
 /*
- * Fondo con el patrón de objetos (public/patron-fondo.jpg), fijo detrás de todo el contenido.
- * La imagen está pensada para el tema claro: se funde con --bg con multiply.
- * En oscuro se invierte (el crema pasa a casi negro y las líneas quedan claras, con hue-rotate
- * para conservar sus tonos) y se suma con screen, así el fondo sigue siendo --bg.
+ * Fondo de la tienda: manchas de luz cálida, como la luz natural sobre los estantes de madera del
+ * local. Solo CSS (sin imagen), fijo detrás de todo el contenido.
  */
 .bg-pattern {
   position: relative;
@@ -40,34 +40,16 @@ h1, h2, h3, h4, .font-display {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background-image: url("/patron-fondo.jpg");
-  background-repeat: repeat;
-  background-size: 1100px auto;
-  mix-blend-mode: multiply;
-  opacity: 0.55;
+  background:
+    radial-gradient(60rem 40rem at 0% 0%, color-mix(in oklab, var(--color-dorado-viejo) 14%, transparent), transparent 70%),
+    radial-gradient(50rem 36rem at 100% 30%, color-mix(in oklab, var(--color-terracota) 9%, transparent), transparent 70%),
+    radial-gradient(56rem 40rem at 30% 100%, color-mix(in oklab, var(--color-salvia) 12%, transparent), transparent 70%);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not(.light) .bg-pattern::before {
-    filter: invert(1) hue-rotate(180deg) saturate(0.8);
-    mix-blend-mode: screen;
-    opacity: 0.22;
-  }
-}
-
-:root.dark .bg-pattern::before {
-  filter: invert(1) hue-rotate(180deg) saturate(0.8);
-  mix-blend-mode: screen;
-  opacity: 0.22;
-}
-
-/* El logo es negro sobre transparente: en oscuro se pasa a blanco para que no se pierda. */
-@media (prefers-color-scheme: dark) {
-  :root:not(.light) .brand-logo {
-    filter: brightness(0) invert(1);
-  }
-}
-
-:root.dark .brand-logo {
-  filter: brightness(0) invert(1);
+/* Frases y afirmaciones ("Confía en el proceso"): la serif en cursiva, grande y con aire. */
+.font-affirmation {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0.01em;
 }

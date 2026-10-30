@@ -1,6 +1,5 @@
 import type { OrderStatus, StaffRole } from "@caracol/shared";
 import { ROLE_LABELS, formatMoney } from "@caracol/shared";
-import { env } from "../../config/env.js";
 import { escapeHtml } from "../../utils/html.js";
 
 interface EmailTemplate {
@@ -17,21 +16,22 @@ const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   cancelled: "Cancelado",
 };
 
+/** La paleta de la tienda (client/src/styles/tokens.css, modo claro). */
 const BRAND = {
-  bg: "#F5F0E4",
-  surface: "#FBF8F1",
-  text: "#211E1A",
-  textMuted: "#6B6252",
-  primary: "#211E1A",
-  onPrimary: "#C69A3B",
+  bg: "#F4ECDF",
+  surface: "#FBF6EE",
+  text: "#2F2219",
+  textMuted: "#6F5B49",
+  primary: "#5C3B26",
+  onPrimary: "#FBF6EE",
 };
 
 /**
- * El logo se sirve desde el front público. Si el cliente de correo bloquea las
- * imágenes, el alt mantiene el nombre de la marca visible.
+ * Logotipo en texto, igual que en la tienda: no depende de que el cliente de correo muestre imágenes.
+ * Cuando esté el logo de Caracol en `client/public/`, se puede volver a una <img>.
  */
 function logoHtml(): string {
-  return `<img src="${env.CLIENT_URL}/logo.png" alt="Caracol do Mar" width="180" style="display:block;width:180px;max-width:100%;height:auto;margin:0 auto 24px;border:0;font-size:20px;color:${BRAND.text};text-align:center;" />`;
+  return `<p style="margin:0 0 24px;text-align:center;font-family:Georgia,serif;font-size:28px;font-weight:bold;color:${BRAND.text};">Caracol <span style="font-style:italic;font-weight:normal;color:#745820;">do Mar</span></p>`;
 }
 
 function wrapper(title: string, bodyHtml: string): string {
