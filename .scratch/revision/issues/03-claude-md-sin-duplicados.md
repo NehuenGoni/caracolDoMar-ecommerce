@@ -4,7 +4,7 @@
 
 **Bloqueado por:** Ninguno (se puede empezar ya)
 
-**Estado:** ready-for-agent
+**Estado:** done
 
-- [ ] Cada convención aparece una sola vez
-- [ ] No se pierde ninguna regla al deduplicar
+- [x] Cada convención aparece una sola vez
+- [x] No se pierde ninguna regla al deduplicar
