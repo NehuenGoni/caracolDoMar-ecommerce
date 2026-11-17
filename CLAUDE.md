@@ -32,16 +32,6 @@ Ecommerce/Gran Grow. Idioma de la UI y de los comentarios: español rioplatense.
   (24 h más si el admin rechaza uno). Los datos de la cuenta solo los ve el dueño del pedido.
 - **Importación de facturas con IA:** la IA nunca toca el catálogo; deja un borrador que revisa un admin.
   `anthropicService.ts` es el único archivo que importa el SDK (los tests lo mockean).
-- **Transacciones:** lo que escribe varios documentos a la vez (compras, importación de facturas) va
-  dentro de `withTransaction` (`utils/transaction.ts`) y pasa la `session` a cada consulta. Con un Mongo
-  sin replica set corre igual, sin sesión. Sus tests usan `connectTestReplSetDB`. Nada con efectos fuera
-  de la base (emails, APIs) puede ir adentro: la transacción se puede reintentar.
-- **Costo y precio:** los escribe la compra (`supplierPurchaseService`); el precio sugerido sale de
-  `suggestedPrice` (shared) con la configuración de Ajustes.
-- **Pago por transferencia:** el pedido nace `pending`, reserva stock y vence a las 48 h sin comprobante
-  (24 h más si el admin rechaza uno). Los datos de la cuenta solo los ve el dueño del pedido.
-- **Importación de facturas con IA:** la IA nunca toca el catálogo; deja un borrador que revisa un admin.
-  `anthropicService.ts` es el único archivo que importa el SDK (los tests lo mockean).
 - **Roles y permisos:** `customer | seller | admin`. Qué puede cada uno vive en un solo lugar:
   `ROLE_PERMISSIONS` (`shared/src/constants/permissions.ts`). El server protege con
   `requirePermission("...")`, nunca con el rol a mano; la UI usa `can("...")` (`useAuth`) solo para no
