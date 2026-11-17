@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { InlineMessage } from "@/components/ui/InlineMessage";
 import { Spinner } from "@/components/ui/Spinner";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/useAuth";
 import { useAdminUsers } from "@/hooks/admin/useAdminUsers";
 import { ApiError } from "@/lib/apiClient";
 import { changeStaffRole, revokeInvite, revokeStaff } from "@/lib/adminUsersApi";

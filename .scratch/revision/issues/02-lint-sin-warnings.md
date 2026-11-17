@@ -4,8 +4,8 @@
 
 **Bloqueado por:** Ninguno (se puede empezar ya)
 
-**Estado:** ready-for-agent
+**Estado:** done
 
-- [ ] `npm run lint` con 0 errores y 0 warnings
-- [ ] Todos los imports de los hooks actualizados
-- [ ] typecheck y tests en verde
+- [x] `npm run lint` con 0 errores y 0 warnings
+- [x] Todos los imports de los hooks actualizados
+- [x] typecheck y tests en verde

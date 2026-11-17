@@ -1,9 +1,6 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { readThemePreference, writeThemePreference, type ThemePreference } from "@/lib/themeStorage";
-
-export type { ThemePreference } from "@/lib/themeStorage";
-
-type ResolvedTheme = "light" | "dark";
+import { ThemeContext, type ResolvedTheme, type ThemeContextValue } from "./useTheme";
 
 function resolveSystemTheme(): ResolvedTheme {
   if (typeof window === "undefined" || typeof window.matchMedia !== "function") return "light";
@@ -22,18 +19,6 @@ function applyTheme(resolved: ResolvedTheme): void {
 }
 
 const CYCLE_ORDER: ThemePreference[] = ["light", "dark", "system"];
-
-interface ThemeContextValue {
-  /** La preferencia elegida por el usuario. */
-  theme: ThemePreference;
-  /** El tema que efectivamente se está mostrando (resuelve "system"). */
-  resolvedTheme: ResolvedTheme;
-  setTheme: (preference: ThemePreference) => void;
-  /** Recorre claro → oscuro → sistema → claro. */
-  cycleTheme: () => void;
-}
-
-const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<ThemePreference>(() => readThemePreference());
@@ -77,10 +62,4 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
-}
-
-export function useTheme(): ThemeContextValue {
-  const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error("useTheme debe usarse dentro de ThemeProvider");
-  return ctx;
 }

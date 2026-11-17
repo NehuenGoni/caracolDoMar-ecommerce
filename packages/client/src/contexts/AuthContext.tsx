@@ -1,23 +1,8 @@
 import { hasPermission, type Permission, type User } from "@caracol/shared";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { setAccessToken, setAuthFailureHandler } from "@/lib/apiClient";
 import * as authApi from "@/lib/authApi";
-
-interface AuthContextValue {
-  user: User | null;
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (input: authApi.RegisterInput) => Promise<void>;
-  logout: () => Promise<void>;
-  acceptInvite: (input: authApi.AcceptInviteInput) => Promise<void>;
-  /** ¿Tiene el usuario actual este permiso? (comodidad de la UI: el server lo vuelve a chequear). */
-  can: (permission: Permission) => boolean;
-  /** Actualiza el usuario en memoria tras una respuesta del backend (editar perfil, direcciones). */
-  setUser: (user: User) => void;
-}
-
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+import { AuthContext, type AuthContextValue } from "./useAuth";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -88,10 +73,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth(): AuthContextValue {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth debe usarse dentro de AuthProvider");
-  return ctx;
 }

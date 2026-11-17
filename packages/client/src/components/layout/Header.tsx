@@ -4,8 +4,8 @@ import { LogOut, Menu, Package, ShoppingBag, User as UserIcon, X } from "lucide-
 import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
-import { useAuth } from "@/contexts/AuthContext";
-import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/useAuth";
+import { useCart } from "@/contexts/useCart";
 import { cn } from "@/lib/utils";
 import { Logo } from "./Logo";
 
