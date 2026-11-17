@@ -6,7 +6,7 @@ import { AddressForm } from "@/components/account/AddressForm";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/useAuth";
 import { addAddress, removeAddress, updateAddress, type AddressInput } from "@/lib/usersApi";
 
 export default function AccountAddresses() {

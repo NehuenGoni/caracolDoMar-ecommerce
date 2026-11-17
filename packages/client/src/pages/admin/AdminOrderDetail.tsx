@@ -1,7 +1,7 @@
 import { AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/useAuth";
 import { OrderStatusForm } from "@/components/admin/OrderStatusForm";
 import { TransferReviewCard } from "@/components/admin/TransferReviewCard";
 import { OrderSummaryCard } from "@/components/orders/OrderSummaryCard";

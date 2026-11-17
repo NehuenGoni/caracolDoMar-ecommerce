@@ -4,7 +4,7 @@ import { AuthCard } from "@/components/auth/AuthCard";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { InlineMessage } from "@/components/ui/InlineMessage";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/useAuth";
 import { ApiError } from "@/lib/apiClient";
 
 export default function AcceptInvite() {

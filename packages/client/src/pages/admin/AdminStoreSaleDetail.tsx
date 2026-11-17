@@ -1,5 +1,5 @@
 import { formatMoney } from "@caracol/shared";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/useAuth";
 import { ArrowLeft, Printer } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
