@@ -4,8 +4,8 @@
 
 **Bloqueado por:** Ninguno (se puede empezar ya)
 
-**Estado:** ready-for-agent
+**Estado:** done
 
-- [ ] `npm test` pasa con Node 20 y con Node 26
-- [ ] El setup de tests del cliente provee un `localStorage`/`sessionStorage` en memoria, aislado entre tests
-- [ ] No se toca el código de producción del carrito ni del tema
+- [x] `npm test` pasa con Node 20 y con Node 26
+- [x] El setup de tests del cliente provee un `localStorage`/`sessionStorage` en memoria, aislado entre tests
+- [x] No se toca el código de producción del carrito ni del tema
