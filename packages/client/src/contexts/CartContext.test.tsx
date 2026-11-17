@@ -3,8 +3,10 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as authApi from "@/lib/authApi";
 import * as cartApi from "@/lib/cartApi";
-import { AuthProvider, useAuth } from "./AuthContext.js";
-import { CartProvider, useCart } from "./CartContext.js";
+import { AuthProvider } from "./AuthContext.js";
+import { useAuth } from "./useAuth.js";
+import { CartProvider } from "./CartContext.js";
+import { useCart } from "./useCart.js";
 
 vi.mock("@/lib/authApi");
 vi.mock("@/lib/cartApi");

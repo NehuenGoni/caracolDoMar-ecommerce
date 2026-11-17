@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Monitor, Moon, Sun } from "lucide-react";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useTheme } from "@/contexts/useTheme";
 import { cn } from "@/lib/utils";
 
 const ICONS = { light: Sun, dark: Moon, system: Monitor } as const;

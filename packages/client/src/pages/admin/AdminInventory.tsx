@@ -1,5 +1,5 @@
 import type { StockMovementType } from "@caracol/shared";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/useAuth";
 import { AlertTriangle, History } from "lucide-react";
 import { StockAdjustmentForm } from "@/components/admin/StockAdjustmentForm";
 import { Badge } from "@/components/ui/Badge";

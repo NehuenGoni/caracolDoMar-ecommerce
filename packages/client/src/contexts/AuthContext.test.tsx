@@ -3,7 +3,8 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as authApi from "@/lib/authApi";
-import { AuthProvider, useAuth } from "./AuthContext.js";
+import { AuthProvider } from "./AuthContext.js";
+import { useAuth } from "./useAuth.js";
 
 vi.mock("@/lib/authApi");
 

@@ -1,7 +1,7 @@
 import { hasPermission, isStaff, type Permission, type Role } from "@caracol/shared";
 import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/useAuth";
 import { Spinner } from "@/components/ui/Spinner";
 
 interface ProtectedRouteProps {

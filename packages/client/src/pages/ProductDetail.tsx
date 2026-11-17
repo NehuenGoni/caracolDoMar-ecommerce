@@ -8,7 +8,7 @@ import { PriceTag } from "@/components/ui/PriceTag";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { Spinner } from "@/components/ui/Spinner";
 import { Button } from "@/components/ui/Button";
-import { useCart } from "@/contexts/CartContext";
+import { useCart } from "@/contexts/useCart";
 import { useCategories } from "@/hooks/useCategories";
 import { useProduct } from "@/hooks/useProduct";
 import { siteUrl, useSeo } from "@/hooks/useSeo";

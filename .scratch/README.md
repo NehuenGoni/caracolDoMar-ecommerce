@@ -8,8 +8,8 @@ Estados: `ready-for-agent` (lo puede tomar un agente), `ready-for-human` (necesi
 ## Revisión: lo que quedó suelto
 
 - [revision/01: Tests del cliente verdes en Node ≥ 25](revision/issues/01-tests-cliente-node-moderno.md) — `ready-for-agent`
-- [revision/02: Lint sin warnings de react-refresh](revision/issues/02-lint-sin-warnings.md) — `ready-for-agent`
-- [revision/03: Limpiar viñetas duplicadas del CLAUDE.md](revision/issues/03-claude-md-sin-duplicados.md) — `ready-for-agent`
+- [revision/02: Lint sin warnings de react-refresh](revision/issues/02-lint-sin-warnings.md) — `done`
+- [revision/03: Limpiar viñetas duplicadas del CLAUDE.md](revision/issues/03-claude-md-sin-duplicados.md) — `done`
 - [revision/04: Cargar los datos reales del negocio](revision/issues/04-datos-del-negocio.md) — `ready-for-human`
 - [revision/05: Reemplazar logo y fotos heredadas de Amanda](revision/issues/05-assets-de-caracol.md) — `ready-for-human`
 

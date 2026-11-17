@@ -4,7 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 
 const { useAuth } = vi.hoisted(() => ({ useAuth: vi.fn() }));
-vi.mock("@/contexts/AuthContext", () => ({ useAuth }));
+vi.mock("@/contexts/useAuth", () => ({ useAuth }));
 
 import { AdminNav } from "./AdminNav";
 

@@ -2,7 +2,7 @@ import { LogOut, Store } from "lucide-react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/useAuth";
 import { Logo } from "./Logo";
 import { PageTransition } from "./PageTransition";
 import { ProtectedRoute } from "./ProtectedRoute";
