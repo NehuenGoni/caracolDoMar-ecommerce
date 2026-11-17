@@ -9,7 +9,6 @@ function wrapper({ children }: { children: ReactNode }) {
 }
 
 beforeEach(() => {
-  localStorage.clear();
   document.documentElement.classList.remove("light", "dark");
 });
 

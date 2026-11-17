@@ -8,7 +8,6 @@ vi.mock("@/lib/settingsApi", () => ({ getPublicAnnouncement: vi.fn() }));
 const mocked = vi.mocked(getPublicAnnouncement);
 
 beforeEach(() => {
-  sessionStorage.clear();
   mocked.mockReset();
 });
 

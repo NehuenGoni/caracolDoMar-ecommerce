@@ -1,5 +1,5 @@
+/// <reference types="vitest/globals" />
 import "@testing-library/jest-dom/vitest";
-import { beforeEach } from "vitest";
 
 // Node ≥ 25 trae un `localStorage`/`sessionStorage` global propio (sin `--localstorage-file` queda a
 // medias, sin `clear` ni `getItem`) que tapa al de jsdom. Instalamos un Storage en memoria, igual en

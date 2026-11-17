@@ -36,7 +36,6 @@ const sampleItemInput = {
 
 beforeEach(() => {
   vi.resetAllMocks();
-  localStorage.clear();
   vi.mocked(authApi.refresh).mockRejectedValue(new Error("sin sesión"));
 });
 
