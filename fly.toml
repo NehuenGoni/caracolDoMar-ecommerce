@@ -1,4 +1,4 @@
-app = "caracol-server"
+app = "caracoldomar-ecommerce"
 primary_region = "gru"
 
 [build]
