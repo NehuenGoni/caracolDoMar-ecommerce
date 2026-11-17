@@ -8,21 +8,29 @@
  */
 import { isCrawler } from "./packages/client/src/lib/crawlers";
 
-declare const process: { env: Record<string, string | undefined> };
-
 export const config = { matcher: ["/", "/catalogo", "/productos/:path*"] };
 
 const TIMEOUT_MS = 8000;
 
+/** `process` puede no existir en el runtime del middleware: leerlo a ciegas tira la página entera. */
+function readApiUrl(): string | undefined {
+  const runtime = globalThis as { process?: { env?: Record<string, string | undefined> } };
+  return runtime.process?.env?.VITE_API_URL;
+}
+
 export default async function middleware(request: Request): Promise<Response | undefined> {
-  const apiUrl = process.env.VITE_API_URL;
-  if (!apiUrl || !isCrawler(request.headers.get("user-agent"))) return undefined;
-
-  const url = new URL(request.url);
-  const target = `${apiUrl.replace(/\/+$/, "")}/seo/render?path=${encodeURIComponent(url.pathname + url.search)}`;
-
+  // Todo adentro del try: si algo falla acá, la visita sigue de largo hacia la SPA en vez de un 500.
   try {
-    const res = await fetch(target, { headers: { accept: "text/html" }, signal: AbortSignal.timeout(TIMEOUT_MS) });
+    const apiUrl = readApiUrl();
+    if (!apiUrl || !isCrawler(request.headers.get("user-agent"))) return undefined;
+
+    const url = new URL(request.url);
+    const target = `${apiUrl.replace(/\/+$/, "")}/seo/render?path=${encodeURIComponent(url.pathname + url.search)}`;
+
+    const res = await fetch(target, {
+      headers: { accept: "text/html" },
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
     if (res.status >= 500) return undefined;
     return new Response(res.body, {
       status: res.status,
