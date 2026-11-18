@@ -1,14 +1,14 @@
 import { act, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it } from "vitest";
-import { ThemeProvider, useTheme } from "./ThemeContext.js";
+import { ThemeProvider } from "./ThemeContext.js";
+import { useTheme } from "./useTheme.js";
 
 function wrapper({ children }: { children: ReactNode }) {
   return <ThemeProvider>{children}</ThemeProvider>;
 }
 
 beforeEach(() => {
-  localStorage.clear();
   document.documentElement.classList.remove("light", "dark");
 });
 

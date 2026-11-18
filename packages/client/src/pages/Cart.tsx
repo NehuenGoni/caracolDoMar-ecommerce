@@ -7,8 +7,8 @@ import { CartItemRow } from "@/components/cart/CartItemRow";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PriceTag } from "@/components/ui/PriceTag";
-import { useAuth } from "@/contexts/AuthContext";
-import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/useAuth";
+import { useCart } from "@/contexts/useCart";
 import { getShippingSettings } from "@/lib/shippingApi";
 
 export default function Cart() {

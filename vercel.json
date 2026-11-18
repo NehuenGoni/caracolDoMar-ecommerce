@@ -3,8 +3,8 @@
   "installCommand": "npm ci",
   "outputDirectory": "packages/client/dist",
   "rewrites": [
-    { "source": "/sitemap.xml", "destination": "https://caracol-server.fly.dev/api/seo/sitemap.xml" },
-    { "source": "/robots.txt", "destination": "https://caracol-server.fly.dev/api/seo/robots.txt" },
+    { "source": "/sitemap.xml", "destination": "https://caracoldomar-ecommerce.fly.dev/api/seo/sitemap.xml" },
+    { "source": "/robots.txt", "destination": "https://caracoldomar-ecommerce.fly.dev/api/seo/robots.txt" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

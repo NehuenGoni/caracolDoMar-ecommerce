@@ -1,23 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import * as cartApi from "@/lib/cartApi";
 import { clearLocalCart, readLocalCart, writeLocalCart } from "@/lib/cartStorage";
 import { EMPTY_CART, type CartItemView, type CartView } from "@/types/cart";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "./useAuth";
+import { CartContext, type AddCartItemInput, type CartContextValue } from "./useCart";
 
 function computeSubtotal(items: CartItemView[]): number {
   return items.reduce((sum, item) => sum + item.subtotal, 0);
-}
-
-export interface AddCartItemInput {
-  productId: string;
-  variantSku: string;
-  quantity: number;
-  name: string;
-  slug: string;
-  image?: string;
-  variantLabel: string;
-  unitPrice: number;
-  availableStock: number;
 }
 
 function upsertLocalItem(items: CartItemView[], input: AddCartItemInput): CartItemView[] {
@@ -46,17 +35,6 @@ function upsertLocalItem(items: CartItemView[], input: AddCartItemInput): CartIt
   };
   return [...items, newItem];
 }
-
-interface CartContextValue {
-  cart: CartView;
-  isLoading: boolean;
-  addItem: (input: AddCartItemInput) => Promise<void>;
-  updateQuantity: (productId: string, variantSku: string, quantity: number) => Promise<void>;
-  removeItem: (productId: string, variantSku: string) => Promise<void>;
-  clear: () => Promise<void>;
-}
-
-const CartContext = createContext<CartContextValue | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
@@ -172,10 +150,4 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
-}
-
-export function useCart(): CartContextValue {
-  const ctx = useContext(CartContext);
-  if (!ctx) throw new Error("useCart debe usarse dentro de CartProvider");
-  return ctx;
 }
